@@ -25,7 +25,7 @@ const BussinessCard = async () => {
         </div>
       </div>
       <QrcodeGenerator
-        link={`${process.env.BaseUrl}/checkout/${selectedUser.slug}`}
+        link={`${process.env.BaseUrl}?business=${selectedUser.slug}`}
       />
     </div>
   );
