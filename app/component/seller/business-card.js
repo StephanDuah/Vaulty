@@ -21,11 +21,11 @@ const BussinessCard = async () => {
         </p>
         <div>
           <span>Checkout link:</span>
-          <span>{`${process.env.BaseUrl}/checkout/${selectedUser.slug}`}</span>
+          <span>{`${process.env.BaseUrl}/checkout?business=${selectedUser.slug}`}</span>
         </div>
       </div>
       <QrcodeGenerator
-        link={`${process.env.BaseUrl}?business=${selectedUser.slug}`}
+        link={`${process.env.BASEURL}/checkout?business=${selectedUser.slug}`}
       />
     </div>
   );
