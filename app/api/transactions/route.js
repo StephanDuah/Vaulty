@@ -61,7 +61,6 @@ export const GET = async (req) => {
     // const filteredResults = newFormat.filter((item) => item !== null);
     const transactions = await Transaction.find({}).populate("sellerId");
 
-    await sendRefundMessageSeller();
     await checkSellerDeadline(transactions);
     return NextResponse.json({ message: "Success" });
   } catch (error) {

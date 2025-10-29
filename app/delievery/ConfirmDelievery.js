@@ -78,7 +78,7 @@ const ConfirmDelivery = ({ id }) => {
               </p>
             </div>
 
-            <div className="space-y-3">
+            {/* <div className="space-y-3">
               <Link href="/buyer/purchase">
                 <Button className="w-full bg-primary hover:bg-primary/90">
                   View All Orders
@@ -89,7 +89,7 @@ const ConfirmDelivery = ({ id }) => {
                   Continue Shopping
                 </Button>
               </Link>
-            </div>
+            </div> */}
 
             <p className="text-sm text-gray-500 mt-6">
               Need help?{" "}
