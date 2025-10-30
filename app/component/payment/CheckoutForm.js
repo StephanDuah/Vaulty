@@ -38,7 +38,7 @@ import { createTransaction } from "@/app/action/TransactionAction";
 import Modal from "./Modal";
 import { displayCurrency } from "@/lib/utils";
 import { getProducts } from "@/app/action/ProductAction";
-import Icon from "../icon";
+import Icon from "../IconImage";
 
 const countryCodes = [
   { code: "+233", country: "GH", flag: "🇬🇭" },

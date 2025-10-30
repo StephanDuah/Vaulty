@@ -11,7 +11,7 @@ import {
 import { Shield, Users, CreditCard, Package, ArrowRight } from "lucide-react";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import Icon from "./component/icon";
+import Icon from "./component/IconImage";
 
 export default async function HomePage() {
   // const session = await auth();

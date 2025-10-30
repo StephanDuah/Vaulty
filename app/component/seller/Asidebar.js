@@ -17,7 +17,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { useState } from "react";
-import Icon from "../icon";
+import Icon from "../IconImage";
 
 const NavData = {
   navMain: [
