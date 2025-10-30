@@ -88,6 +88,12 @@ const Asidebar = ({ children }) => {
           {children}
         </div>
       </header>
+      <div
+        className={`${
+          !open ? "hidden" : "block"
+        } w-full lg:hidden h-screen bg-black/10 absolute top-0 bottom-0 left-0`}
+        onClick={() => setOpen(false)}
+      ></div>
     </>
   );
 };
