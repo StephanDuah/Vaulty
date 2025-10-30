@@ -14,7 +14,7 @@ import Link from "next/link";
 import { displayCurrency, formatGhanaPhone } from "@/lib/utils";
 
 const baseClass =
-  "w-[40px] h-[40px] rounded-md text-white flex items-center justify-center";
+  "w-[35px] h-[35px] rounded-md text-white flex items-center justify-center";
 
 // Optional: Adjust icon size if needed (e.g., w-5 h-5)
 const iconMap = {
@@ -52,6 +52,32 @@ const iconMap = {
   ),
 };
 
+const DisplayPrice = ({ status, amount }) => {
+  let price = {
+    pending: (
+      <span className="text-yellow-800 text-sm font-semibold float-end">
+        {displayCurrency(amount)}
+      </span>
+    ),
+    shipped: (
+      <span className="text-blue-800 text-sm font-semibold float-end">
+        {displayCurrency(amount)}
+      </span>
+    ),
+    cancelled: (
+      <span className="text-red-800 text-sm font-semibold float-end">
+        - {displayCurrency(amount)}
+      </span>
+    ),
+    delievered: (
+      <span className="text-green-800 text-sm font-semibold float-end">
+        + {displayCurrency(amount)}
+      </span>
+    ),
+  };
+  return price[status];
+};
+
 const RecentTransaction = async () => {
   const session = await auth();
   const user = session.user;
@@ -82,7 +108,7 @@ const RecentTransaction = async () => {
                   <div className="flex items-center gap-2 ">
                     {iconMap[transacations.transactionStatus]}
                     <div>
-                      <p className="text-xl font-bold">
+                      <p className="text-lg font-bold">
                         {transacations?.buyerDetail?.firstName}
                       </p>
                       <p className=" capitalize">
@@ -91,13 +117,16 @@ const RecentTransaction = async () => {
                     </div>
                   </div>
                   <div>
-                    <p className="">
+                    <p className="text-sm font-bold">
                       {" "}
-                      {displayCurrency(transacations.totalAmount)}
+                      <DisplayPrice
+                        amount={transacations.totalAmount}
+                        status={transacations.transactionStatus}
+                      />
                     </p>
                     <Link href={`/seller/Transaction/${transacations._id}`}>
                       <Button variant="outline" className="hover:bg-primary">
-                        View Transaction
+                        View Details
                       </Button>
                     </Link>
                   </div>

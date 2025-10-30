@@ -22,7 +22,7 @@ const ShipNow = async () => {
   return (
     <Wrapper>
       <p className="text">Ship Now</p>
-      <div className="grid grid-cols-5 gap-4 p-4">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 p-4">
         {transactions.map((transaction) => (
           <ShipCard key={transaction._id} transaction={transaction} />
         ))}

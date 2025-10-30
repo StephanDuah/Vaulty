@@ -38,6 +38,7 @@ import { createTransaction } from "@/app/action/TransactionAction";
 import Modal from "./Modal";
 import { displayCurrency } from "@/lib/utils";
 import { getProducts } from "@/app/action/ProductAction";
+import Icon from "../icon";
 
 const countryCodes = [
   { code: "+233", country: "GH", flag: "🇬🇭" },
@@ -127,10 +128,8 @@ const CheckoutForm = ({ user }) => {
       <div className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="container max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center gap-3 mb-6">
-            <Shield className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold text-primary">
-              TrustVault Checkout
-            </h1>
+            <Icon />
+            <h1 className="text-3xl font-bold text-primary">Checkout</h1>
           </div>
 
           {/* Step Indicator */}

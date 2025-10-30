@@ -17,6 +17,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { useState } from "react";
+import Icon from "../icon";
 
 const NavData = {
   navMain: [
@@ -69,8 +70,8 @@ const Asidebar = ({ children }) => {
           open ? "left-0" : "left-[-300px] transition-all duration-200 ease-in"
         }  w-[250px] h-screen fixed left-0 top-0 md:left-0  bg-white lg:bg-gradient-to-b from-white to-secondary/10 shadow-md z-20 text-center `}
       >
-        <h1 className="text-blue-800 text-2xl font-bold py-4 text-center">
-          Trust Vault
+        <h1 className="text-blue-800 text-2xl font-bold py-4 text-center flex justify-center">
+          <Icon />
         </h1>
         <div className="flex flex-col h-full justify-between px-5 pt-10 pb-20">
           <NavLinks items={NavData.navMain} setOpen={setOpen} />

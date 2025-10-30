@@ -11,6 +11,7 @@ import {
 import { Shield, Users, CreditCard, Package, ArrowRight } from "lucide-react";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import Icon from "./component/icon";
 
 export default async function HomePage() {
   // const session = await auth();
@@ -22,8 +23,7 @@ export default async function HomePage() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Shield className="h-8 w-8 text-primary" />
-              <h1 className="text-2xl font-bold text-primary">TrustVault</h1>
+              <Icon />
             </div>
             <nav className="flex items-center space-x-6">
               <Link

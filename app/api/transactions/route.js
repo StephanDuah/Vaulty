@@ -62,6 +62,7 @@ export const GET = async (req) => {
     const transactions = await Transaction.find({}).populate("sellerId");
 
     await checkSellerDeadline(transactions);
+    console.log("This is a trigger message");
     return NextResponse.json({ message: "Success" });
   } catch (error) {
     console.log(error);
