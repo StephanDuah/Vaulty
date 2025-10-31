@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Vaulty",
+  title: "Vaulty — Secure Fintech Platform",
   description: "An Escrow Checkout System. For reliable trading",
 };
 
