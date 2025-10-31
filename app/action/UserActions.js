@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { object } from "zod";
 import { formatGhanaPhone, generateSecureOTP } from "@/lib/utils";
 import { sendMessage } from "@/lib/mailing/sms";
+import { cache } from "react";
 
 //Creating new user for seller
 export const createSeller = async (prevState, formData) => {
@@ -121,7 +122,7 @@ export const loginUser = async (prevState, formdata) => {
   redirect("/seller");
 };
 
-export const getUserDetailsBySlug = async (slug) => {
+export const getUserDetailsBySlug = cache(async (slug) => {
   try {
     const user = await User.findOne({ slug });
     if (!user) throw new Error("not user found");
@@ -130,9 +131,9 @@ export const getUserDetailsBySlug = async (slug) => {
     console.log(error);
     return error;
   }
-};
+});
 
-export const getUserDetailsByEmail = async (email) => {
+export const getUserDetailsByEmail = cache(async (email) => {
   try {
     const user = await User.findOne({ email });
     if (!user) throw new Error("not user found");
@@ -141,7 +142,7 @@ export const getUserDetailsByEmail = async (email) => {
     console.log(error);
     return error;
   }
-};
+});
 
 export const logout = async () => {
   await signOut();
@@ -196,7 +197,7 @@ export const resendOtp = async (email) => {
   }
 };
 
-export const getUserby = async (email) => {
+export const getUserby = cache(async (email) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
@@ -207,4 +208,4 @@ export const getUserby = async (email) => {
   } catch (error) {
     console.log(error);
   }
-};
+});
