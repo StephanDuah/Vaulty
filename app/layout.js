@@ -17,9 +17,6 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Vaulty",
   description: "An Escrow Checkout System. For reliable trading",
-  openGraph: {
-    images: "@/public/images/OG.png",
-  },
 };
 
 export default function RootLayout({ children }) {
