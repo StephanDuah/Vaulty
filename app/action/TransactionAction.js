@@ -10,7 +10,7 @@ import {
 import { sendHello, sendMessages, sendTemplate } from "@/lib/mailing/whatsapp";
 import { Escrow } from "@/lib/models/Escrow";
 import User from "@/lib/models/User";
-import { generateSecureOTP } from "@/lib/utils";
+import { formatDate, generateSecureOTP } from "@/lib/utils";
 
 const { Transaction } = require("@/lib/models/Transaction");
 
@@ -59,7 +59,7 @@ export const getTransactions = async () => {
   await connectDB();
   try {
     const transactions = await Transaction.find({});
-    console.log(transactions);
+    console.log(formatDate(transactions.map((i) => i.createAt)));
     return JSON.parse(JSON.stringify(transactions));
   } catch (error) {
     console.log(error);

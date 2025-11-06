@@ -5,6 +5,7 @@ import { sendRefundMessageSeller } from "@/lib/mailing/email";
 import { sendBuyerReminder, sendSMS } from "@/lib/mailing/sms";
 import { sendHello } from "@/lib/mailing/whatsapp";
 import User from "@/lib/models/User";
+import { formatDate } from "@/lib/utils";
 import { NextResponse } from "next/server";
 
 const { Escrow } = require("@/lib/models/Escrow");
@@ -60,7 +61,8 @@ export const GET = async (req) => {
     // Filter out null values
     // const filteredResults = newFormat.filter((item) => item !== null);
     const transactions = await Transaction.find({}).populate("sellerId");
-
+    const date = transactions.map((id) => formatDate(id.createdAt));
+    console.log(date);
     await checkSellerDeadline(transactions);
     console.log("This is a trigger message");
     return NextResponse.json({ message: "Success" });

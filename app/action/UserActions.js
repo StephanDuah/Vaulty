@@ -106,6 +106,7 @@ export const getUserbyCredentials = async (email, password) => {
 
 //Login User
 export const loginUser = async (prevState, formdata) => {
+  await connectDB();
   try {
     const email = formdata.get("email");
     const password = formdata.get("password");
@@ -123,6 +124,7 @@ export const loginUser = async (prevState, formdata) => {
 };
 
 export const getUserDetailsBySlug = cache(async (slug) => {
+  await connectDB();
   try {
     const user = await User.findOne({ slug });
     if (!user) throw new Error("not user found");
@@ -134,6 +136,7 @@ export const getUserDetailsBySlug = cache(async (slug) => {
 });
 
 export const getUserDetailsByEmail = cache(async (email) => {
+  await connectDB();
   try {
     const user = await User.findOne({ email });
     if (!user) throw new Error("not user found");
@@ -149,6 +152,7 @@ export const logout = async () => {
 };
 
 export const verify = async (email, otpcode) => {
+  await connectDB();
   try {
     const user = await User.findOne({ email });
     if (!user) throw new Error("User not found");

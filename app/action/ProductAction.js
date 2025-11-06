@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth";
 import { connectDB } from "@/lib/database";
+
 import Product from "@/lib/models/product";
 import { generateUniqueId } from "@/lib/utils";
 

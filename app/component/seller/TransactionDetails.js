@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { confirmShipment } from "@/app/action/TransactionAction";
-import { displayCurrency } from "@/lib/utils";
+import { displayCurrency, formatDate } from "@/lib/utils";
 
 export default function TransactionDetails({ transaction }) {
   const router = useRouter();
@@ -92,7 +92,7 @@ export default function TransactionDetails({ transaction }) {
               <div>
                 <p className="text-sm font-medium ">Date</p>
                 <p className="mt-1 text-sm ">
-                  {new Date(transaction.createdAt).toLocaleDateString()}
+                  {formatDate(transaction.createdAt)}
                 </p>
               </div>
               <div>
@@ -100,7 +100,7 @@ export default function TransactionDetails({ transaction }) {
                 <Badge
                   className="mt-1"
                   variant={
-                    transaction.transactionStatus === "Completed"
+                    transaction.transactionStatus === "delievered"
                       ? "success"
                       : transaction.transactionStatus === "Disputed"
                       ? "destructive"
