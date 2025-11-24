@@ -32,7 +32,7 @@ export const createSeller = async (prevState, formData) => {
 
     if (!businessName) errors.businessName = "Business name is required";
     if (businessNameExist) errors.businessName = "Business name already exists";
-    if (phoneNumberExist) errors.phoneNo = "PhoneNumber name already exists";
+    if (phoneNumberExist) errors.phoneNo = "Phone number already exists";
 
     if (!email.includes("@")) errors.email = "Enter a valid email";
     if (phoneNo.length !== 10)
@@ -90,6 +90,30 @@ export const createSeller = async (prevState, formData) => {
   return redirect(`/auth/verify-otp?sid=${email}`);
 };
 
+export const updateSeller = async (userId, prevState, formData) => {
+  await connectDB();
+  let firstName = formData?.get("firstName");
+  let lastName = formData?.get("lastName");
+  let businessName = formData?.get("businessName");
+  let email = formData?.get("email");
+  let phoneNo = formData?.get("phoneNo");
+  let dtd = formData?.get("dtd");
+
+  try {
+    let updatedUser = {};
+    if (firstName) updatedUser.firstName = firstName;
+    if (lastName) updatedUser.lastName = lastName;
+    if (businessName) updatedUser.businessName = businessName;
+    if (email) updatedUser.email = email;
+    if (phoneNo) updatedUser.phoneNo = phoneNo;
+    if (dtd) updatedUser.dtd = dtd;
+
+    const user = await User.findByIdAndUpdate(userId, updatedUser);
+    return { type: "success", message: "User successfully update" };
+  } catch (error) {
+    return { type: "error", message: "Something went wrong" };
+  }
+};
 //Getting user by email and password
 export const getUserbyCredentials = async (email, password) => {
   await connectDB();

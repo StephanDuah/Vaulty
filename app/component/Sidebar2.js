@@ -104,7 +104,11 @@ const ProfileBar = ({ user }) => {
       <DropdownMenuContent className="w-[300px]">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Profile</DropdownMenuItem>
+        <DropdownMenuItem>
+          <Link className="w-full h-full" href={"/seller/profile"}>
+            Profile
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem>Billing</DropdownMenuItem>
         <DropdownMenuItem>Settings</DropdownMenuItem>
         <DropdownMenuItem>

@@ -13,7 +13,7 @@ const BussinessCard = async () => {
   }
 
   return (
-    <div className="w-full p-5 lg:py-3 lg:px-36 bg-primary rounded-2xl space-y-10 text-white flex flex-col lg:flex-row items-center justify-between">
+    <div className="w-full p-5 lg:py-10 lg:px-20 bg-primary rounded-2xl space-y-10 text-white flex flex-col lg:flex-row items-center justify-between">
       <div className="space-y-5">
         <h4 className="text-3xl font-bold ">
           Welcome {selectedUser.firstName} {selectedUser.lastName}
@@ -27,7 +27,7 @@ const BussinessCard = async () => {
         />
         <div>
           <span>Checkout link:</span>
-          <div className="bg-white/5 flex p-4 py-2 rounded-full space-x-9">
+          <div className="bg-white/5 flex p-4 py-2 rounded-full space-x-9 text-xs">
             <div>
               {" "}
               {`${process.env.BASEURL}/checkout?business=${selectedUser.slug}`}
