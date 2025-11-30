@@ -74,9 +74,9 @@ const data = {
 const Sidebar2 = async ({ children }) => {
   const session = await auth();
   const user = await getUserDetailsByEmail(session.user.email);
-  console.log(user);
+
   return (
-    <section className="w-full relative bg-gray-100/30 min-h-screen">
+    <section className="w-full relative bg-gray-100/30 min-h-screen h-full">
       {/* Sidebar */}
       <Asidebar>
         <div className=" w-full flex  items-center space-x-5 justify-end px-2 md:px-10">

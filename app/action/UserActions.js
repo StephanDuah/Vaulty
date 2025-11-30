@@ -9,6 +9,8 @@ import { object } from "zod";
 import { formatGhanaPhone, generateSecureOTP } from "@/lib/utils";
 import { sendMessage } from "@/lib/mailing/sms";
 import { cache } from "react";
+import { uploadFromBuffer } from "@/lib/imaging";
+import { NextResponse } from "next/server";
 
 //Creating new user for seller
 export const createSeller = async (prevState, formData) => {
@@ -237,3 +239,32 @@ export const getUserby = cache(async (email) => {
     console.log(error);
   }
 });
+
+export const CardUpload = async (cardImage, userId, cardType) => {
+  await connectDB();
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const result = await uploadFromBuffer(cardImage);
+    const identification = {
+      type: cardType,
+      picture: {
+        imageName: result.secure_url,
+        imageId: result.public_id,
+      },
+    };
+
+    console.log(identification);
+    user.identification = identification;
+    user.verification = "pending";
+    await user.save();
+    console.log(result);
+    return { type: "success", message: "Image sent to the system" };
+  } catch (error) {
+    console.log(error);
+    return { type: "error", message: "Something went wrong" };
+  }
+};

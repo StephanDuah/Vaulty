@@ -43,7 +43,7 @@ const DataTable = ({ columns, data }) => {
   return (
     <Card>
       <CardContent>
-        <div className="flex items-center py-4 justify-between">
+        <div className="flex flex-col-reverse md:flex-row items-center py-4 justify-between gap-2">
           <Input
             placeholder="Filter Products..."
             value={table.getColumn("name")?.getFilterValue() ?? ""}
@@ -53,7 +53,7 @@ const DataTable = ({ columns, data }) => {
             className="max-w-sm"
           />
 
-          <p className="text-slate-600">You Have {data?.length} Productss </p>
+          <p className="text-primary">You Have {data?.length} Productss </p>
         </div>
         <div className="rounded-md border">
           <Table>

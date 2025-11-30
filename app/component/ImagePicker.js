@@ -1,10 +1,12 @@
 "use client";
 import React, { use, useRef, useState } from "react";
 import Image from "next/image";
+import { CardUpload } from "../action/UserActions";
 
-const ImagePicker = () => {
+const ImagePicker = ({ id, type }) => {
   const ImageInput = useRef();
   const [selectedImage, setSelectedImage] = useState("");
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const onClick = () => {
     ImageInput.current.click();
@@ -31,6 +33,12 @@ const ImagePicker = () => {
     setError("");
   };
 
+  const handleUpload = async () => {
+    setLoading(true);
+    await CardUpload(selectedImage, id, type);
+    setLoading(false);
+  };
+
   const handleDelete = () => {
     setSelectedImage("");
   };
@@ -39,7 +47,10 @@ const ImagePicker = () => {
     <div className="flex flex-col space-y-3">
       <label>Upload your Id</label>
       {error && <label className="text-lg text-red-500">{error}</label>}
-      <div className="w-[250px] h-[200px] rounded-md border-2 border-gray-100 relative">
+      <div
+        className="w-[250px] h-[200px] rounded-md border-2 border-gray-100 relative"
+        onClick={onClick}
+      >
         {" "}
         {!selectedImage && (
           <div className="flex items-center justify-center w-full h-full">
@@ -75,12 +86,15 @@ const ImagePicker = () => {
         hidden
       />
       <div>
-        <button
-          className="px-6 py-2 bg-red-500 rounded-full border-white border-2 text-white hover:bg-red-600 "
-          onClick={onClick}
-        >
-          Upload
-        </button>
+        {selectedImage && (
+          <button
+            className="px-6 py-2 bg-red-500 rounded-full border-white border-2 text-white hover:bg-red-600 "
+            onClick={handleUpload}
+            disabled={loading}
+          >
+            {loading ? "Uploading..." : "Upload"}
+          </button>
+        )}
       </div>
     </div>
   );

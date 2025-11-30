@@ -16,22 +16,24 @@ const page = async () => {
 
   return (
     <div className="px-0 lg:px-32 flex-col space-y-5">
-      <ProfileCard />
-      <VerificationCard type={"verification"} />
+      <ProfileCard user={santizedUser} />
+      <VerificationCard type={santizedUser.verification} id={session.user.id} />
       <EditProfile user={santizedUser} />
     </div>
   );
 };
 
-const ProfileCard = () => {
+const ProfileCard = ({ user }) => {
   return (
     <Card className="flex w-100 p-5 flex-col md:flex-row items-center">
       <div className="flex flex-col space-y-4 text-center md:text-left">
-        <p className="text-xl lg:text-3xl font-extrabold">Kwaku Duah</p>
+        <p className="text-xl lg:text-3xl font-extrabold">
+          {user.firstName} {user.lastName}
+        </p>
         <p className="text-xl text-gray-400">Gig Employer</p>
         <div className="flex space-x-2">
           <BagdeComponent
-            title={"0 points"}
+            title={`${user.escrowScore} points`}
             icon={<Coins />}
             className="text-blue-600 bg-blue-100 "
           />
@@ -49,7 +51,7 @@ const ProfileCard = () => {
   );
 };
 
-const VerificationCard = ({ type }) => {
+const VerificationCard = ({ type, id }) => {
   switch (type) {
     case "verification":
       return (
@@ -75,7 +77,7 @@ const VerificationCard = ({ type }) => {
               We re verifying your document. This usually take takes 24-48
               hours.
             </p>
-            <ImagePicker />
+            <ImagePicker id={id} type={"Ghana Card"} />
           </div>
         </Card>
       );

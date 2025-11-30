@@ -27,6 +27,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
+import { FaTrashCan, FaPen } from "react-icons/fa6";
 export const columns = [
   {
     accessorKey: "name",
@@ -50,7 +51,11 @@ export const columns = [
       const amount = row.getValue("amount");
       const formatted = displayCurrency(amount);
 
-      return <div className="text-gray-800 text-lg">{formatted}</div>;
+      return (
+        <div className="text-gray-800   min-w-[100px] my-10 md:my-2">
+          {formatted}
+        </div>
+      );
     },
   },
   { accessorKey: "productCode", header: "Product Code" },
@@ -97,11 +102,14 @@ export const columns = [
 
       return (
         <div className="flex gap-2 items-center">
-          <Link className="text-sm px-4 py-2 text-teal-600" href="/">
-            Edit
+          <Link
+            className="text-sm px-4 py-2 text-teal-600 items-center gap-3 inline-flex"
+            href="/"
+          >
+            <FaPen /> <span>Edit</span>
           </Link>
-          <button className="px-4 py-2 bg-red-600 text-sm text-white rounded-full">
-            Delete
+          <button className="px-4 py-2 bg-red-600 text-sm text-white inline-flex items-center gap-3">
+            <FaTrashCan /> <span>Delete</span>
           </button>
         </div>
       );
