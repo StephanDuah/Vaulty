@@ -56,7 +56,7 @@ export const columns = [
       return (
         <Link
           className="text-sm px-4 py-2 text-primary items-center gap-3 inline-flex"
-          href={`/Transaction/${transaction.id}`}
+          href={`Transaction/${transaction.id}`}
         >
           <span>View</span>
         </Link>
