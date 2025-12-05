@@ -105,7 +105,14 @@ export const updateSeller = async (userId, prevState, formData) => {
     let updatedUser = {};
     if (firstName) updatedUser.firstName = firstName;
     if (lastName) updatedUser.lastName = lastName;
-    if (businessName) updatedUser.businessName = businessName;
+    if (businessName) {
+      let slug = slugify(businessName, {
+        lower: true,
+      });
+      updatedUser.slug = slug;
+      updatedUser.businessName = businessName;
+    }
+
     if (email) updatedUser.email = email;
     if (phoneNo) updatedUser.phoneNo = phoneNo;
     if (dtd) updatedUser.dtd = dtd;

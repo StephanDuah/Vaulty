@@ -30,7 +30,7 @@ const ProfileCard = ({ user }) => {
         <p className="text-xl lg:text-3xl font-extrabold">
           {user.firstName} {user.lastName}
         </p>
-        <p className="text-xl text-gray-400">Gig Employer</p>
+        <p className="text-xl text-gray-400">{user.businessName}</p>
         <div className="flex space-x-2">
           <BagdeComponent
             title={`${user.escrowScore} points`}

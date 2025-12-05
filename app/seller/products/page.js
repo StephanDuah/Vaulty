@@ -9,7 +9,6 @@ import Link from "next/link";
 import React from "react";
 
 const page = async () => {
-  await connectDB();
   const session = await auth();
   const id = session.user.id;
 
@@ -17,7 +16,7 @@ const page = async () => {
 
   return (
     <div className="md:p-5">
-      <div className="float-end">
+      <div className="flex justify-end">
         <Link
           className="bg-primary text-white px-5 py-3 tex-sm inline-flex items-center space-x-2 "
           href={"/seller/products/create"}
@@ -25,8 +24,8 @@ const page = async () => {
           <Plus /> <span className="text-sm">Add Product</span>
         </Link>
       </div>
-      <div className="my-20">
-        <DataTable columns={columns} data={data} />{" "}
+      <div className="my-5">
+        <DataTable columns={columns} data={data} />
       </div>
     </div>
   );

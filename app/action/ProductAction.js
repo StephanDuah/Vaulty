@@ -48,3 +48,14 @@ export async function getProducts(id) {
     return { success: false, message: error.message };
   }
 }
+
+export async function deleteProduct(id) {
+  await connectDB();
+  try {
+    await Product.findByIdAndDelete(id);
+    return { status: "success", message: "Product deleted" };
+  } catch (e) {
+    console.log(e);
+    return { status: "error", message: "Something went wrong" };
+  }
+}

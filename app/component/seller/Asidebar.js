@@ -38,7 +38,7 @@ const NavData = {
     },
     {
       title: "Transaction",
-      url: "/seller/transaction",
+      url: "/seller/Transaction",
       icon: FolderIcon,
     },
     {
