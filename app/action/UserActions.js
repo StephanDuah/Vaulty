@@ -24,8 +24,6 @@ export const createSeller = async (prevState, formData) => {
   let phoneNo = formData.get("phoneNo");
   let dtd = formData.get("dtd");
   try {
-    console.log(password);
-    console.log(confirm_password);
     let errors = {};
     const opt = generateSecureOTP();
     const userExist = await User.findOne({ email });
