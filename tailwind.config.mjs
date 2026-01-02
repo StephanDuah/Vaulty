@@ -1,3 +1,5 @@
+import animate from "tailwindcss-animate";
+
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: ["class"],
@@ -23,29 +25,16 @@ export default {
       },
       keyframes: {
         fadeIn: {
-          "0%": {
-            opacity: 0,
-          },
-          "100%": {
-            opacity: 1,
-          },
+          "0%": { opacity: 0 },
+          "100%": { opacity: 1 },
         },
-
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
         shake: {
           "0%, 100%": { transform: "translateX(0)" },
@@ -60,19 +49,19 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#1A237E", // Deep Blue
+          DEFAULT: "#1A237E",
           foreground: "#FFFFFF",
         },
         secondary: {
-          DEFAULT: "#F9A825", // Warm Gold
+          DEFAULT: "#F9A825",
           foreground: "#1A237E",
         },
         neutral: {
-          DEFAULT: "#F5F5F5", // Light Gray
+          DEFAULT: "#F5F5F5",
           foreground: "#212121",
         },
         accent: {
-          DEFAULT: "#2E7D32", // Emerald Green
+          DEFAULT: "#2E7D32",
           foreground: "#FFFFFF",
         },
         destructive: {
@@ -81,7 +70,7 @@ export default {
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
-          foreground: "#212121", // Charcoal Gray
+          foreground: "#212121",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
@@ -99,5 +88,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [animate],
 };

@@ -283,3 +283,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
+DisplayTransactions(5,)

@@ -64,7 +64,8 @@ const CheckoutForm = ({ user }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const userForm = use(user);
-  const { businessName, phoneNo, email, dtd, _id } = userForm;
+  const { businessName, phoneNo, email, dtd, _id, firstName, lastName } =
+    userForm;
 
   useEffect(() => {
     setSubtotal(
@@ -246,7 +247,7 @@ const CheckoutForm = ({ user }) => {
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
             <ProfileDisplay
-              name="Kwaku Duah"
+              name={firstName + "" + lastName}
               businessName={businessName}
               phoneNumber={phoneNo}
               location="Tafo Bonsuom"
