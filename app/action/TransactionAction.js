@@ -207,14 +207,12 @@ export const getmessageInfo = async (transaction, user, escrow, id) => {
   return {
     totalAmount: transaction?.totalAmount,
     product: transaction?.items.map((items) => items.itemCode).toString(),
-    shippingDate: new Date(
-      escrow?.heldAt + user.dtd * 24 * 60 * 60 * 1000
-    ).getDate(),
+    shippingDate: new Date(escrow?.heldAt + user.dtd * 24 * 60 * 60 * 1000),
     buyerName:
       transaction.buyerDetail?.firstName +
       " " +
       transaction?.buyerDetail.lastName,
-    bussinessName: user?.bussinessName,
+    businessName: user?.businessName,
     sellerNumber: user?.phoneNo,
     buyerNumber: transaction?.buyerDetail.phoneNumber,
     transactionId: id,

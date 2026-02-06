@@ -83,12 +83,14 @@ export default function VerifyOTPPage() {
     setError("");
 
     try {
-      // Simulate API call
-      await resendOtp(sid);
-
-      setTimeLeft(300); // Reset timer
-      setCanResend(false);
-      setOtp("");
+      const result = await resendOtp(sid);
+      if (result?.status === true) {
+        setTimeLeft(300);
+        setCanResend(false);
+        setOtp("");
+      } else {
+        setError(result?.message ?? "Failed to resend code. Please try again.");
+      }
     } catch (err) {
       setError("Failed to resend code. Please try again.");
     } finally {

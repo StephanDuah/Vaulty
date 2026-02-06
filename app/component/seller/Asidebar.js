@@ -68,11 +68,11 @@ const Asidebar = ({ children }) => {
       <aside
         className={`${
           open ? "left-0" : "left-[-300px] transition-all duration-200 ease-in"
-        }  w-[250px] h-screen fixed left-0 top-0 md:left-0  bg-white lg:bg-gradient-to-b from-white to-secondary/10 shadow-md z-20 text-center `}
+        } w-[250px] h-screen fixed left-0 top-0 md:left-0 bg-[#1e3a5f] shadow-xl z-20 text-center`}
       >
-        <h1 className="text-blue-800 text-2xl font-bold py-4 text-center flex justify-center">
+        <div className="py-4 flex justify-center [&_img]:invert [&_img]:brightness-200">
           <Icon />
-        </h1>
+        </div>
         <div className="flex flex-col h-full justify-between px-5 pt-10 pb-20">
           <NavLinks items={NavData.navMain} setOpen={setOpen} />
           <NavLinks items={NavData.navSecondary} setOpen={setOpen} />
@@ -80,7 +80,7 @@ const Asidebar = ({ children }) => {
       </aside>
 
       {/* Header */}
-      <header className="z-10 px-10 py-6 bg-white fixed top-0 right-0 left-0 md:left-[250px] shadow-md flex items-center justify-between">
+      <header className="z-10 px-10 py-6 bg-white fixed top-0 right-0 left-0 md:left-[250px] shadow-md flex items-center justify-between rounded-b-xl border-b border-slate-200">
         <button className="block md:hidden" onClick={() => setOpen(true)}>
           <MenuIcon />
         </button>
@@ -109,11 +109,11 @@ const NavLinks = ({ items, setOpen }) => {
           <Link
             href={link.url}
             onClick={() => setOpen(false)}
-            className={`flex items-center space-x-2   rounded-xl text-sm py-2 text-center  px-4 ${
+            className={`flex items-center space-x-2 rounded-xl text-sm py-2 text-center px-4 transition duration-150 ${
               link.url === pathname
-                ? "bg-primary text-white s"
-                : "text-gray-800"
-            } transition duration-150`}
+                ? "bg-blue-500 text-white shadow-md"
+                : "text-white/80 hover:bg-white/10 hover:text-white"
+            }`}
           >
             {link.icon ? <link.icon className="h-4 w-4" /> : ""}
             <span>{link.title}</span>

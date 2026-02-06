@@ -158,14 +158,14 @@ export function ChartAreaInteractive() {
   })
 
   return (
-    (<Card className="@container/card">
-      <CardHeader className="relative">
-        <CardTitle>Total Visitors</CardTitle>
-        <CardDescription>
+    (<Card className="@container/card border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+      <CardHeader className="relative bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
+        <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Transaction Volume</CardTitle>
+        <CardDescription className="text-gray-600 dark:text-gray-400">
           <span className="@[540px]/card:block hidden">
-            Total for the last 3 months
+            Escrow transaction trends over time
           </span>
-          <span className="@[540px]/card:hidden">Last 3 months</span>
+          <span className="@[540px]/card:hidden">Transaction trends</span>
         </CardDescription>
         <div className="absolute right-4 top-4">
           <ToggleGroup
@@ -173,19 +173,19 @@ export function ChartAreaInteractive() {
             value={timeRange}
             onValueChange={setTimeRange}
             variant="outline"
-            className="@[767px]/card:flex hidden">
-            <ToggleGroupItem value="90d" className="h-8 px-2.5">
-              Last 3 months
+            className="@[767px]/card:flex hidden bg-white/80 backdrop-blur-sm">
+            <ToggleGroupItem value="90d" className="h-8 px-2.5 hover:bg-blue-50">
+              3M
             </ToggleGroupItem>
-            <ToggleGroupItem value="30d" className="h-8 px-2.5">
-              Last 30 days
+            <ToggleGroupItem value="30d" className="h-8 px-2.5 hover:bg-blue-50">
+              30D
             </ToggleGroupItem>
-            <ToggleGroupItem value="7d" className="h-8 px-2.5">
-              Last 7 days
+            <ToggleGroupItem value="7d" className="h-8 px-2.5 hover:bg-blue-50">
+              7D
             </ToggleGroupItem>
           </ToggleGroup>
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="@[767px]/card:hidden flex w-40" aria-label="Select a value">
+            <SelectTrigger className="@[767px]/card:hidden flex w-32 bg-white/80 backdrop-blur-sm" aria-label="Select a value">
               <SelectValue placeholder="Last 3 months" />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
@@ -203,19 +203,19 @@ export function ChartAreaInteractive() {
         </div>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-        <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
+        <ChartContainer config={chartConfig} className="aspect-auto h-[300px] w-full">
           <AreaChart data={filteredData}>
             <defs>
               <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-desktop)" stopOpacity={1.0} />
-                <stop offset="95%" stopColor="var(--color-desktop)" stopOpacity={0.1} />
+                <stop offset="5% stopColor="var(--color-desktop)" stopOpacity={0.8} />
+                <stop offset="95% stopColor="var(--color-desktop)" stopOpacity={0.1} />
               </linearGradient>
               <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-mobile)" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="var(--color-mobile)" stopOpacity={0.1} />
+                <stop offset="5% stopColor="var(--color-mobile)" stopOpacity={0.6} />
+                <stop offset="95% stopColor="var(--color-mobile)" stopOpacity={0.05} />
               </linearGradient>
             </defs>
-            <CartesianGrid vertical={false} />
+            <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-gray-200/50" />
             <XAxis
               dataKey="date"
               tickLine={false}
@@ -243,15 +243,17 @@ export function ChartAreaInteractive() {
               } />
             <Area
               dataKey="mobile"
-              type="natural"
+              type="monotone"
               fill="url(#fillMobile)"
               stroke="var(--color-mobile)"
+              strokeWidth={2}
               stackId="a" />
             <Area
               dataKey="desktop"
-              type="natural"
+              type="monotone"
               fill="url(#fillDesktop)"
               stroke="var(--color-desktop)"
+              strokeWidth={2}
               stackId="a" />
           </AreaChart>
         </ChartContainer>

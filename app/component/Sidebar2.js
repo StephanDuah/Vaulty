@@ -76,16 +76,18 @@ const Sidebar2 = async ({ children }) => {
   const user = await getUserDetailsByEmail(session.user.email);
 
   return (
-    <section className="w-full relative bg-gray-100/30 min-h-screen h-full">
+    <section className="w-full relative bg-slate-100 min-h-screen h-full">
       {/* Sidebar */}
       <Asidebar>
-        <div className=" w-full flex  items-center space-x-5 justify-end px-2 md:px-10">
-          <BellIcon className="h-4 w-4" />
+        <div className="w-full flex items-center space-x-5 justify-end px-2 md:px-10">
+          <BellIcon className="h-4 w-4 text-slate-600" />
           <ProfileBar user={user} />
         </div>
       </Asidebar>
-      <main className="ml-0 lg:ml-[250px] mt-[80px] p-6 bg-slate-50 min-h-screen">
-        {children}
+      <main className="ml-0 lg:ml-[250px] mt-[80px] p-6 min-h-screen">
+        <div className="rounded-2xl bg-white shadow-lg p-6 md:p-8">
+          {children}
+        </div>
       </main>
     </section>
   );

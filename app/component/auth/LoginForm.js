@@ -12,6 +12,7 @@ import {
   AlertCircle,
   CheckCircle,
   Mail,
+  User,
   Lock,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -204,15 +205,15 @@ const FormSection = () => {
             <form action={formAction} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-primary font-medium">
-                  Email Address
+                  Phone Number or Email Address
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="email"
                     name="email"
-                    type="email"
-                    placeholder="seller@example.com"
+                    type="text"
+                    placeholder="seller@example.com or 0558791358"
                     required
                     className="pl-10 border-primary/20 focus-visible:ring-primary h-12"
                   />

@@ -25,7 +25,7 @@ export const createSeller = async (prevState, formData) => {
   let dtd = formData.get("dtd");
   try {
     let errors = {};
-    const opt = generateSecureOTP();
+    const otpCode = generateSecureOTP();
     const userExist = await User.findOne({ email });
     const businessNameExist = await User.findOne({ businessName });
     const phoneNumberExist = await User.findOne({ phoneNo });
@@ -73,14 +73,14 @@ export const createSeller = async (prevState, formData) => {
       password: hashedPassword,
       email,
       otp: {
-        code: opt,
+        code: otpCode,
         expires: Date.now() + 5 * 60 * 1000,
       },
     };
 
     await User.create(body);
     const phoneNumber = formatGhanaPhone(phoneNo);
-    sendOtp(opt, phoneNumber);
+    await sendOtp(otpCode, phoneNumber);
     console.log("success");
   } catch (error) {
     console.log(error);
@@ -122,10 +122,12 @@ export const updateSeller = async (userId, prevState, formData) => {
   }
 };
 //Getting user by email and password
-export const getUserbyCredentials = async (email, password) => {
+export const getUserbyCredentials = async (identifier, password) => {
   await connectDB();
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+      $or: [{ email: identifier }, { phoneNo: identifier }],
+    });
     if (!user) throw new CredentialsSignin("User not found");
     const isMatch = await bcryptjs.compare(password, user.password);
     if (!isMatch) throw new CredentialsSignin("Invalid credentials");
@@ -183,52 +185,73 @@ export const logout = async () => {
 };
 
 export const verify = async (email, otpcode) => {
+  if (!email || !otpcode || typeof otpcode !== "string") {
+    return { status: false, message: "Email and code are required" };
+  }
   await connectDB();
   try {
     const user = await User.findOne({ email });
-    if (!user) throw new Error("User not found");
-    const { code, expires } = user.otp;
-    if (expires < Date.now())
+    if (!user) return { status: false, message: "User not found" };
+
+    const otp = user.otp;
+    if (!otp?.code || !otp?.expires) {
+      return {
+        status: false,
+        message: "No code found. Please request a new code.",
+      };
+    }
+    const expiresAt =
+      otp.expires instanceof Date ? otp.expires.getTime() : otp.expires;
+    if (expiresAt < Date.now()) {
       return { status: false, message: "Code has expired" };
-    if (code !== otpcode) return { status: false, message: "Invalid code" };
-    user.isVerified = true;
+    }
+    if (otp.code !== otpcode.trim()) {
+      return { status: false, message: "Invalid code" };
+    }
+
     user.otp = {};
     await user.save();
-    return { status: true, message: "User Registered successfully" };
+    return { status: true, message: "User registered successfully" };
   } catch (e) {
-    console.log(e);
+    console.error("verify OTP error:", e);
     return { status: false, message: "Something went wrong" };
   }
 };
 
-const sendOtp = async (optCode, number) => {
-  try {
-    const message = `TrustVault: Your OTP is ${optCode} It will expire in 5 minutes. Please do not share this code.`;
-    const status = await sendMessage(number, message);
-    if (status !== "success") {
-      throw new Error("Something went wrong");
-    }
-  } catch (error) {
-    console.log(error);
+const sendOtp = async (otpCode, number) => {
+  const message = `TrustVault: Your OTP is ${otpCode}. It will expire in 5 minutes. Please do not share this code.`;
+  const status = await sendMessage(number, message);
+  if (status !== "success") {
+    throw new Error(typeof status === "string" ? status : "Failed to send SMS");
   }
 };
 
 export const resendOtp = async (email) => {
+  if (!email || typeof email !== "string" || !email.includes("@")) {
+    return { status: false, message: "Invalid email" };
+  }
   try {
+    await connectDB();
     const otp = {
       code: generateSecureOTP(),
       expires: Date.now() + 5 * 60 * 1000,
     };
 
     const user = await User.findOne({ email });
-    if (!user) throw new Error("User not found");
-    user.otp = otp;
+    if (!user) return { status: false, message: "User not found" };
+
+    user.otp = { code: otp.code, expires: new Date(otp.expires) };
     await user.save();
+
     const phoneNumber = formatGhanaPhone(user.phoneNo);
     await sendOtp(otp.code, phoneNumber);
+    return { status: true, message: "Code sent" };
   } catch (e) {
-    console.log(e);
-    return { status: false, message: "Something went wrong" };
+    console.error("resendOtp error:", e);
+    return {
+      status: false,
+      message: e.response?.data?.message ?? e.message ?? "Something went wrong",
+    };
   }
 };
 
@@ -271,5 +294,16 @@ export const CardUpload = async (cardImage, userId, cardType) => {
   } catch (error) {
     console.log(error);
     return { type: "error", message: "Something went wrong" };
+  }
+};
+
+export const getAllUser = async () => {
+  await connectDB();
+  try {
+    const users = await User.find({});
+
+    return JSON.parse(JSON.stringify(users));
+  } catch (error) {
+    console.log(error);
   }
 };

@@ -13,7 +13,7 @@ const BussinessCard = async () => {
   }
 
   return (
-    <div className="w-full p-5 lg:py-10 lg:px-20 bg-primary rounded-2xl space-y-10 text-white flex flex-col lg:flex-row items-center justify-between">
+    <div className="w-full p-5 lg:py-10 lg:px-20 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-2xl shadow-lg space-y-10 text-white flex flex-col lg:flex-row items-center justify-between">
       <div className="space-y-5">
         <h4 className="text-3xl font-bold ">
           Welcome {selectedUser.firstName} {selectedUser.lastName}
