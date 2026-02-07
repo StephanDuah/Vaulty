@@ -4,7 +4,7 @@ import { connectDB } from "@/lib/database";
 import { sendShipmentMesaageToBuyer } from "@/lib/mailing/email";
 import {
   sendSuccessfulPayment,
-  sendShipmentMesaage,
+  sendShipmentMessage,
   sendSuccessfulTransaction,
 } from "@/lib/mailing/sms";
 import { sendHello, sendMessages, sendTemplate } from "@/lib/mailing/whatsapp";
@@ -38,7 +38,7 @@ export const createTransaction = async (data) => {
         transaction,
         user,
         escrow,
-        transaction._id
+        transaction._id,
       );
 
       console.log(info);
@@ -82,7 +82,7 @@ export const confirmShipment = async (id) => {
 
   try {
     const transaction = await Transaction.findOne({ _id: id }).populate(
-      "sellerId"
+      "sellerId",
     );
 
     if (!transaction) {
@@ -108,7 +108,7 @@ export const confirmShipment = async (id) => {
       transaction,
       transaction.sellerId,
       null,
-      transaction._id
+      transaction._id,
     );
 
     console.log("Sending notifications...");
@@ -185,15 +185,15 @@ export const releasefund = async (id, code) => {
         transaction,
         user,
         escrow,
-        transaction._id
+        transaction._id,
       );
       await sendSuccessfulTransaction(
         { totalAmount: transaction.totalAmount, ...info },
-        "buyer"
+        "buyer",
       );
       await sendSuccessfulTransaction(
         { totalAmount: transaction.totalAmount, ...info },
-        "seller"
+        "seller",
       );
 
       return { status: "success", message: "Money has been released" };

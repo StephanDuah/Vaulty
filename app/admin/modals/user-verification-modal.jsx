@@ -89,17 +89,111 @@ export default function UserVerificationModal({
               <CardTitle className="text-base">KYC Documents</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                {/* {user?.kyc?.documents.map((doc, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-3 p-2 rounded border border-border hover:bg-secondary/50"
-                  >
-                    <FileText className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-medium">{doc}</span>
-                    <CheckCircle className="w-4 h-4 text-green-600 ml-auto" />
+              <div className="space-y-4">
+                {/* ID Document */}
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h5 className="font-medium">Identity Document</h5>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="outline">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                ))} */}
+                  <div className="bg-gray-100 rounded-lg h-48 flex items-center justify-center">
+                    <div className="text-center text-gray-500">
+                      <FileText className="h-12 w-12 mx-auto mb-2" />
+                      <p className="text-sm">ID Document Preview</p>
+                      <p className="text-xs mt-1">
+                        {user?.kyc?.idDocument?.type || "Government ID"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-600 mt-3">
+                    <p>
+                      Document Type:{" "}
+                      {user?.kyc?.idDocument?.type || "Not specified"}
+                    </p>
+                    <p>
+                      Document Number:{" "}
+                      {user?.kyc?.idDocument?.number || "Not provided"}
+                    </p>
+                    <p>
+                      Submitted:{" "}
+                      {user?.kyc?.idDocument?.submittedAt
+                        ? new Date(
+                            user.kyc.idDocument.submittedAt,
+                          ).toLocaleDateString()
+                        : "Not available"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Address Proof */}
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h5 className="font-medium">Proof of Address</h5>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="outline">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="bg-gray-100 rounded-lg h-48 flex items-center justify-center">
+                    <div className="text-center text-gray-500">
+                      <FileText className="h-12 w-12 mx-auto mb-2" />
+                      <p className="text-sm">Address Proof Preview</p>
+                      <p className="text-xs mt-1">
+                        {user?.kyc?.addressProof?.type ||
+                          "Utility Bill/Bank Statement"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-600 mt-3">
+                    <p>
+                      Document Type:{" "}
+                      {user?.kyc?.addressProof?.type || "Not specified"}
+                    </p>
+                    <p>
+                      Address:{" "}
+                      {user?.kyc?.addressProof?.address || "Not provided"}
+                    </p>
+                    <p>
+                      Submitted:{" "}
+                      {user?.kyc?.addressProof?.submittedAt
+                        ? new Date(
+                            user.kyc.addressProof.submittedAt,
+                          ).toLocaleDateString()
+                        : "Not available"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Additional Documents */}
+                {user?.kyc?.additionalDocuments &&
+                  user.kyc.additionalDocuments.length > 0 && (
+                    <div className="space-y-2">
+                      <h5 className="font-medium">Additional Documents</h5>
+                      {user.kyc.additionalDocuments.map((doc, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-3 p-2 rounded border border-border hover:bg-secondary/50"
+                        >
+                          <FileText className="w-4 h-4 text-primary" />
+                          <span className="text-sm font-medium">
+                            {doc.name || doc.type}
+                          </span>
+                          <CheckCircle className="w-4 h-4 text-green-600 ml-auto" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
               </div>
             </CardContent>
           </Card>

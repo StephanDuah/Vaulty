@@ -1,6 +1,7 @@
 import BagdeComponent from "@/app/component/Bagde";
 import EditProfile from "@/app/component/EditProfile";
 import ImagePicker from "@/app/component/ImagePicker";
+import ProfessionalVerification from "@/app/component/ProfessionalVerification";
 import { auth } from "@/auth";
 import { Card } from "@/components/ui/card";
 import { connectDB } from "@/lib/database";
@@ -18,6 +19,10 @@ const page = async () => {
     <div className="px-0 lg:px-32 flex-col space-y-5">
       <ProfileCard user={santizedUser} />
       <VerificationCard type={santizedUser.verification} id={session.user.id} />
+      <ProfessionalVerification
+        userId={session.user.id}
+        professionalVerification={santizedUser.professionalVerification || {}}
+      />
       <EditProfile user={santizedUser} />
     </div>
   );

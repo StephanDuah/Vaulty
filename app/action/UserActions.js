@@ -307,3 +307,57 @@ export const getAllUser = async () => {
     console.log(error);
   }
 };
+
+export const uploadProfessionalDocument = async (userId, verificationData) => {
+  await connectDB();
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Upload documents to cloud storage and get URLs
+    const processedDocuments = [];
+    for (const doc of verificationData.documents) {
+      try {
+        const result = await uploadFromBuffer(doc.data);
+        processedDocuments.push({
+          type: doc.type,
+          name: doc.name,
+          url: result.secure_url,
+          publicId: result.public_id,
+          uploadedAt: doc.uploadedAt,
+        });
+      } catch (uploadError) {
+        console.error(`Failed to upload document ${doc.name}:`, uploadError);
+        throw new Error(`Failed to upload ${doc.name}`);
+      }
+    }
+
+    const professionalVerification = {
+      profession: verificationData.profession,
+      businessName: verificationData.businessName,
+      businessRegistration: verificationData.businessRegistration,
+      licenseNumber: verificationData.licenseNumber,
+      experience: verificationData.experience,
+      description: verificationData.description,
+      documents: processedDocuments,
+      submittedAt: verificationData.submittedAt,
+      status: verificationData.status,
+    };
+
+    user.professionalVerification = professionalVerification;
+    await user.save();
+
+    return {
+      type: "success",
+      message: "Professional verification submitted successfully",
+    };
+  } catch (error) {
+    console.error("Professional verification upload error:", error);
+    return {
+      type: "error",
+      message: error.message || "Failed to submit professional verification",
+    };
+  }
+};
