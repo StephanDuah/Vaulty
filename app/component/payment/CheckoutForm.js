@@ -63,16 +63,14 @@ const CheckoutForm = ({ user }) => {
   const [response, setResponse] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
 
-  const userForm = use(user);
-  const { businessName, phoneNo, email, dtd, _id, firstName, lastName } =
-    userForm;
+  const { businessName, phoneNo, email, dtd, _id, firstName, lastName } = user;
 
   useEffect(() => {
     setSubtotal(
       selectedProducts.reduce(
         (total, item) => total + item.price * item.quantity,
-        0
-      )
+        0,
+      ),
     );
   }, [selectedProducts]);
 
@@ -247,7 +245,7 @@ const CheckoutForm = ({ user }) => {
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
             <ProfileDisplay
-              name={firstName + "" + lastName}
+              name={`${firstName} ${lastName}`}
               businessName={businessName}
               phoneNumber={phoneNo}
               location="Tafo Bonsuom"
@@ -290,7 +288,6 @@ const ProductSearchStep = ({
         setIsLoading(true);
         setError(null);
         const data = await getProducts(sellerId);
-        console.log(data);
         console.log("Fetched products:", data);
         const newFormat = data?.map((items) => ({
           ...items,
@@ -316,7 +313,9 @@ const ProductSearchStep = ({
       // Simulate API call delay for better UX
       const timer = setTimeout(() => {
         const results = products.filter((product) =>
-          product.productCode?.toLowerCase().includes(searchQuery.toLowerCase())
+          product.productCode
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase()),
         );
         setSearchResults(results);
         setIsSearching(false);
@@ -336,7 +335,7 @@ const ProductSearchStep = ({
     } else {
       // Remove product
       setSelectedProducts(
-        selectedProducts.filter((p) => p._id !== product._id)
+        selectedProducts.filter((p) => p._id !== product._id),
       );
     }
   };
@@ -347,8 +346,8 @@ const ProductSearchStep = ({
     } else {
       setSelectedProducts(
         selectedProducts.map((p) =>
-          p._id === productId ? { ...p, quantity: newQuantity } : p
-        )
+          p._id === productId ? { ...p, quantity: newQuantity } : p,
+        ),
       );
     }
   };
@@ -598,7 +597,6 @@ const ProductCard = ({
                 </Button>
               </div>
               <span className="text-sm text-gray-600 ml-2">
-                {console.log(quantity)}
                 Total: {displayCurrency(product.price * quantity)}
               </span>
             </div>

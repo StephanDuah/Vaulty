@@ -21,26 +21,47 @@ const BussinessCard = async () => {
         <p className=" capitalize">
           <span>Business name:</span> <span>{selectedUser.businessName}</span>
         </p>
-        <ShareButtons
-          url={`${process.env.BASEURL}/checkout?business=${selectedUser.slug}`}
-          title={"Trust Vault Checkout"}
-        />
-        <div>
-          <span>Checkout link:</span>
-          <div className="bg-white/5 flex p-4 py-2 rounded-full space-x-9 text-xs">
-            <div>
-              {" "}
-              {`${process.env.BASEURL}/checkout?business=${selectedUser.slug}`}
-            </div>
-            <CopyLink
-              text={`${process.env.BASEURL}/checkout?business=${selectedUser.slug}`}
-            />
+
+        {/* Check if seller is verified */}
+        {selectedUser.professionalVerification?.status !== "verified" ? (
+          <div className="bg-red-500/20 border border-red-500 rounded-lg p-4 mb-4">
+            <p className="text-red-100 text-sm font-medium">
+              ⚠️ Your account is not verified. You must complete professional
+              verification to start selling and receive payments.
+            </p>
+            <p className="text-red-200 text-xs mt-2">
+              Please verify your account to enable checkout links and payment
+              processing.
+            </p>
           </div>
-        </div>
+        ) : (
+          <>
+            <ShareButtons
+              url={`${process.env.BASEURL}/checkout?business=${selectedUser.slug}`}
+              title={"Trust Vault Checkout"}
+            />
+            <div>
+              <span>Checkout link:</span>
+              <div className="bg-white/5 flex p-4 py-2 rounded-full space-x-9 text-xs md:text-lg">
+                <div>
+                  {" "}
+                  {`${process.env.BASEURL}/checkout?business=${selectedUser.slug}`}
+                </div>
+                <CopyLink
+                  text={`${process.env.BASEURL}/checkout?business=${selectedUser.slug}`}
+                />
+              </div>
+            </div>
+          </>
+        )}
       </div>
-      <QrcodeGenerator
-        link={`${process.env.BASEURL}/checkout?business=${selectedUser.slug}`}
-      />
+
+      {/* Only show QR code if seller is verified */}
+      {selectedUser.professionalVerification?.status === "verified" && (
+        <QrcodeGenerator
+          link={`${process.env.BASEURL}/checkout?business=${selectedUser.slug}`}
+        />
+      )}
     </div>
   );
 };

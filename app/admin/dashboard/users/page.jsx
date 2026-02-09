@@ -2,12 +2,21 @@ import React from "react";
 import UsersPage from "./users-table";
 import User from "@/lib/models/User";
 import { connectDB } from "@/lib/database";
-import { getAllUser } from "@/app/action/UserActions";
+import {
+  getAllUser,
+  getPendingVerificationUsers,
+} from "@/app/action/UserActions";
 
 const page = async () => {
   await connectDB();
-  const user = await getAllUser();
-  return <UsersPage allusers={user} />;
+
+  // Get all users for the table
+  const allusers = await getAllUser();
+
+  // Get pending verification users for highlighting
+  const pendingUsers = await getPendingVerificationUsers();
+
+  return <UsersPage allusers={allusers} pendingUsers={pendingUsers} />;
 };
 
 export default page;

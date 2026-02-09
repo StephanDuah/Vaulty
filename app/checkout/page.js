@@ -11,12 +11,17 @@ const getSeller = async (slug) => {
   const user = await User.findOne({ slug }).lean();
   if (!user) notFound();
 
+  // Check if seller is verified
+  if (user.verification !== "verified") {
+    notFound();
+  }
+
   return JSON.parse(JSON.stringify(user));
 };
 
 const Payment = async ({ searchParams }) => {
   const { business } = await searchParams;
-  const user = getSeller(business); // ✅ Await the function
+  const user = await getSeller(business); // ✅ Await function
 
   return (
     <div>

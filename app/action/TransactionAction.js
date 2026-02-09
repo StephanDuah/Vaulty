@@ -113,8 +113,8 @@ export const confirmShipment = async (id) => {
 
     console.log("Sending notifications...");
     await Promise.all([
-      sendShipmentMesaage({ code, ...info }, "buyer"),
-      sendShipmentMesaage(info, "seller"),
+      sendShipmentMessage({ code, ...info }, "buyer"),
+      sendShipmentMessage(info, "seller"),
     ]);
 
     return { status: "Success", message: "Product has been marked as shipped" };

@@ -148,7 +148,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Sidebar */}
       <aside className="w-64 bg-white shadow-xl border-r border-gray-200">
         <div className="p-6 bg-gradient-to-r from-blue-600 to-purple-600">

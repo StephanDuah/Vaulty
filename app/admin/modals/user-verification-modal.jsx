@@ -13,33 +13,63 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle, FileText } from "lucide-react";
+import { CheckCircle, FileText, Eye, Download } from "lucide-react";
+import { verifyUser, rejectUser } from "@/app/action/AdminAction";
+import { toast } from "sonner";
 
-export default function UserVerificationModal({
-  user,
-  isOpen,
-  onClose,
-  onConfirm,
-}) {
+export default function UserVerificationModal({ user, isOpen, onClose }) {
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
 
-  const handleConfirm = async () => {
+  const handleApprove = async () => {
     setIsSubmitting(true);
-    setTimeout(() => {
-      onConfirm(notes);
-      setNotes("");
+    try {
+      const result = await verifyUser(user._id);
+      if (result.status) {
+        toast.success("User verified successfully");
+        onClose();
+      } else {
+        toast.error(result.message || "Failed to verify user");
+      }
+    } catch (error) {
+      toast.error("Something went wrong");
+    } finally {
       setIsSubmitting(false);
-    }, 500);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectionReason.trim()) {
+      toast.error("Please provide a reason for rejection");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const result = await rejectUser(user._id, rejectionReason);
+      if (result.status) {
+        toast.success("User rejected successfully");
+        onClose();
+      } else {
+        toast.error(result.message || "Failed to reject user");
+      }
+    } catch (error) {
+      toast.error("Something went wrong");
+    } finally {
+      setIsSubmitting(false);
+      setRejectionReason("");
+    }
   };
 
   return (
     <AlertDialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <AlertDialogContent className="max-w-2xl">
+      <AlertDialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <AlertDialogHeader>
           <AlertDialogTitle>User Verification</AlertDialogTitle>
           <AlertDialogDescription>
-            Review and verify user account details below
+            Review and verify {user.firstName} {user.lastName}'s account details
+            and documents
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -86,101 +116,108 @@ export default function UserVerificationModal({
           {/* KYC Documents Card */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">KYC Documents</CardTitle>
+              <CardTitle className="text-base">
+                Professional Verification
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {/* ID Document */}
-                <div className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h5 className="font-medium">Identity Document</h5>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Download className="h-4 w-4" />
-                      </Button>
+            <CardContent className="space-y-4">
+              {/* ID Document */}
+              {user?.professionalVerification?.documents &&
+                user.professionalVerification.documents.length > 0 && (
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h5 className="font-medium">Identity Document</h5>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                  <div className="bg-gray-100 rounded-lg h-48 flex items-center justify-center">
-                    <div className="text-center text-gray-500">
-                      <FileText className="h-12 w-12 mx-auto mb-2" />
-                      <p className="text-sm">ID Document Preview</p>
+                    <div className="bg-gray-100 rounded-lg h-48 flex items-center justify-center">
+                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm">Document Preview</p>
                       <p className="text-xs mt-1">
-                        {user?.kyc?.idDocument?.type || "Government ID"}
+                        {user.professionalVerification.documents[0]?.type ||
+                          "ID Document"}
+                      </p>
+                    </div>
+                    <div className="text-sm text-gray-600 mt-3">
+                      <p>
+                        Document Type:{" "}
+                        {user.professionalVerification.documents[0]?.type ||
+                          "Not specified"}
+                      </p>
+                      <p>
+                        License Number:{" "}
+                        {user.professionalVerification.licenseNumber ||
+                          "Not provided"}
+                      </p>
+                      <p>
+                        Submitted:{" "}
+                        {user.professionalVerification.submittedAt
+                          ? new Date(
+                              user.professionalVerification.submittedAt,
+                            ).toLocaleDateString()
+                          : "Not available"}
                       </p>
                     </div>
                   </div>
-                  <div className="text-sm text-gray-600 mt-3">
-                    <p>
-                      Document Type:{" "}
-                      {user?.kyc?.idDocument?.type || "Not specified"}
-                    </p>
-                    <p>
-                      Document Number:{" "}
-                      {user?.kyc?.idDocument?.number || "Not provided"}
-                    </p>
-                    <p>
-                      Submitted:{" "}
-                      {user?.kyc?.idDocument?.submittedAt
-                        ? new Date(
-                            user.kyc.idDocument.submittedAt,
-                          ).toLocaleDateString()
-                        : "Not available"}
-                    </p>
+                )}
+
+              {/* Address Proof */}
+              <div className="border rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h5 className="font-medium">Business Information</h5>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="outline">
+                      <Download className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-
-                {/* Address Proof */}
-                <div className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h5 className="font-medium">Proof of Address</h5>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="bg-gray-100 rounded-lg h-48 flex items-center justify-center">
-                    <div className="text-center text-gray-500">
-                      <FileText className="h-12 w-12 mx-auto mb-2" />
-                      <p className="text-sm">Address Proof Preview</p>
-                      <p className="text-xs mt-1">
-                        {user?.kyc?.addressProof?.type ||
-                          "Utility Bill/Bank Statement"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-600 mt-3">
-                    <p>
-                      Document Type:{" "}
-                      {user?.kyc?.addressProof?.type || "Not specified"}
-                    </p>
-                    <p>
-                      Address:{" "}
-                      {user?.kyc?.addressProof?.address || "Not provided"}
-                    </p>
-                    <p>
-                      Submitted:{" "}
-                      {user?.kyc?.addressProof?.submittedAt
-                        ? new Date(
-                            user.kyc.addressProof.submittedAt,
-                          ).toLocaleDateString()
-                        : "Not available"}
-                    </p>
-                  </div>
+                <div className="bg-gray-100 rounded-lg h-48 flex items-center justify-center">
+                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm">Business Registration</p>
+                  <p className="text-xs mt-1">
+                    {user.professionalVerification.businessRegistration ||
+                      "Business Document"}
+                  </p>
                 </div>
+                <div className="text-sm text-gray-600 mt-3">
+                  <p>
+                    Business Name:{" "}
+                    {user.professionalVerification.businessName ||
+                      "Not specified"}
+                  </p>
+                  <p>
+                    Registration:{" "}
+                    {user.professionalVerification.businessRegistration ||
+                      "Not provided"}
+                  </p>
+                  <p>
+                    Submitted:{" "}
+                    {user.professionalVerification.submittedAt
+                      ? new Date(
+                          user.professionalVerification.submittedAt,
+                        ).toLocaleDateString()
+                      : "Not available"}
+                  </p>
+                </div>
+              </div>
 
-                {/* Additional Documents */}
-                {user?.kyc?.additionalDocuments &&
-                  user.kyc.additionalDocuments.length > 0 && (
-                    <div className="space-y-2">
-                      <h5 className="font-medium">Additional Documents</h5>
-                      {user.kyc.additionalDocuments.map((doc, index) => (
+              {/* Additional Documents */}
+              {user?.professionalVerification?.additionalDocuments &&
+                user.professionalVerification.additionalDocuments.length >
+                  0 && (
+                  <div className="space-y-2">
+                    <h5 className="font-medium">Additional Documents</h5>
+                    {user.professionalVerification.additionalDocuments.map(
+                      (doc, index) => (
                         <div
                           key={index}
                           className="flex items-center gap-3 p-2 rounded border border-border hover:bg-secondary/50"
@@ -191,10 +228,10 @@ export default function UserVerificationModal({
                           </span>
                           <CheckCircle className="w-4 h-4 text-green-600 ml-auto" />
                         </div>
-                      ))}
-                    </div>
-                  )}
-              </div>
+                      ),
+                    )}
+                  </div>
+                )}
             </CardContent>
           </Card>
 
@@ -208,24 +245,56 @@ export default function UserVerificationModal({
               placeholder="Add any notes about this verification..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="min-h-24"
+              className="min-h-20"
             />
           </div>
+
+          {/* Rejection Reason */}
+          {user.verification === "pending" && (
+            <div className="space-y-2">
+              <label htmlFor="rejectionReason" className="text-sm font-medium">
+                Rejection Reason (Required)
+              </label>
+              <Textarea
+                id="rejectionReason"
+                placeholder="Please provide a reason for rejection..."
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                className="min-h-20"
+              />
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2 justify-end">
           <AlertDialogCancel asChild>
             <Button variant="outline">Cancel</Button>
           </AlertDialogCancel>
-          <AlertDialogAction asChild>
-            <Button
-              onClick={handleConfirm}
-              disabled={isSubmitting}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              {isSubmitting ? "Verifying..." : "Confirm Verification"}
-            </Button>
-          </AlertDialogAction>
+
+          {user.verification === "pending" && (
+            <AlertDialogAction asChild>
+              <Button
+                onClick={handleReject}
+                disabled={isSubmitting}
+                variant="destructive"
+                className="mr-2"
+              >
+                {isSubmitting ? "Rejecting..." : "Reject"}
+              </Button>
+            </AlertDialogAction>
+          )}
+
+          {user.verification !== "verified" && (
+            <AlertDialogAction asChild>
+              <Button
+                onClick={handleApprove}
+                disabled={isSubmitting}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {isSubmitting ? "Approving..." : "Approve"}
+              </Button>
+            </AlertDialogAction>
+          )}
         </div>
       </AlertDialogContent>
     </AlertDialog>

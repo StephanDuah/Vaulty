@@ -19,7 +19,7 @@ import UsersTable from "../../tables/UsersTable";
 import { getAllUser } from "@/app/action/UserActions";
 import { deleteAllUser, verifyUser } from "@/app/action/AdminAction";
 
-export default function UsersPage({ allusers }) {
+export default function UsersPage({ allusers, pendingUsers }) {
   const [users, setUsers] = useState(allusers);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
@@ -36,7 +36,7 @@ export default function UsersPage({ allusers }) {
   const verifiedUsers = users.filter(
     (user) => user.verification === "verified",
   ).length;
-  const pendingUsers = users.filter(
+  const pendingUsersCount = users.filter(
     (user) => user.verification === "pending",
   ).length;
   const verificationRate =
@@ -61,7 +61,7 @@ export default function UsersPage({ allusers }) {
     },
     {
       title: "Pending Verification",
-      value: pendingUsers,
+      value: pendingUsersCount,
       icon: AlertCircle,
       color: "from-yellow-500 to-orange-600",
       change: "+3.1%",
@@ -87,24 +87,27 @@ export default function UsersPage({ allusers }) {
 
   const handleConfirmVerification = async (notes) => {
     if (selectedUser) {
-      setUsers(
-        users.map((user) =>
-          user._id === selectedUser._id
-            ? {
-                ...user,
-                verification: "verified",
-                kyc: {
-                  ...user.kyc,
-                  verificationDate: new Date().toISOString(),
-                  notes,
-                },
-              }
-            : user,
-        ),
-      );
       const response = await verifyUser(selectedUser._id);
-      setIsVerificationModalOpen(false);
-      setSelectedUser(null);
+      if (response.status) {
+        // Update the user in local state
+        setUsers(
+          users.map((user) =>
+            user._id === selectedUser._id
+              ? {
+                  ...user,
+                  verification: "verified",
+                  kyc: {
+                    ...user.kyc,
+                    verificationDate: new Date().toISOString(),
+                    notes,
+                  },
+                }
+              : user,
+          ),
+        );
+        setIsVerificationModalOpen(false);
+        setSelectedUser(null);
+      }
     }
   };
 
@@ -144,7 +147,7 @@ export default function UsersPage({ allusers }) {
           </div>
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5" />
-            <span className="text-sm">{pendingUsers} Pending</span>
+            <span className="text-sm">{pendingUsers?.length || 0} Pending</span>
           </div>
         </div>
       </div>
@@ -184,6 +187,69 @@ export default function UsersPage({ allusers }) {
           );
         })}
       </div>
+
+      {/* Pending Verification Users Section */}
+      {pendingUsers && pendingUsers.length > 0 && (
+        <Card className="border-0 shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-yellow-50 to-orange-50 border-b">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-orange-600" />
+                  Pending Verification Requests
+                </CardTitle>
+                <p className="text-sm text-gray-600 mt-1">
+                  Users waiting for verification approval
+                </p>
+              </div>
+              <Badge className="bg-orange-100 text-orange-800 border-orange-200">
+                {pendingUsers?.length || 0} Pending
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y">
+              {pendingUsers.slice(0, 5).map((user) => (
+                <div
+                  key={user._id}
+                  className="p-4 hover:bg-yellow-50 transition-colors flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center text-white font-semibold">
+                      {user.firstName && user.firstName.charAt(0).toUpperCase()}
+                      {user.lastName && user.lastName.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        {(user.firstName || "") + " " + (user.lastName || "")}
+                      </p>
+                      <p className="text-sm text-gray-500">{user.email}</p>
+                      <p className="text-xs text-gray-400">
+                        Submitted{" "}
+                        {new Date(user.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => handleVerifyUser(user._id)}
+                    className="bg-orange-600 hover:bg-orange-700 text-white"
+                  >
+                    Review Now
+                  </Button>
+                </div>
+              ))}
+              {pendingUsers.length > 5 && (
+                <div className="p-4 text-center">
+                  <Button variant="outline" className="w-full">
+                    View All {pendingUsers.length} Pending Users
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Main Content Card */}
       <Card className="border-0 shadow-xl">

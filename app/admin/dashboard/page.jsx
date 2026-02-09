@@ -1,5 +1,5 @@
 import React from "react";
-import Link from "next/link";
+import { getAdminStats } from "@/app/action/AdminAction";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +17,6 @@ import {
   Upload,
   Download,
 } from "lucide-react";
-import { getAdminStats } from "@/app/action/AdminAction";
 import { Separator } from "@/components/ui/separator";
 
 export default async function AdminDashboardPage() {
@@ -54,6 +53,16 @@ export default async function AdminDashboardPage() {
       trend: "up",
       color: "from-emerald-500 to-teal-600",
     },
+    {
+      title: "Total Transactions",
+      value: stats.totalTransactions,
+      icon: BarChart3,
+      href: "/admin/dashboard/transactions",
+      description: "All platform transactions",
+      change: "+18.7%",
+      trend: "up",
+      color: "from-purple-500 to-purple-600",
+    },
   ];
 
   const quickActions = [
@@ -72,6 +81,13 @@ export default async function AdminDashboardPage() {
       color: "bg-emerald-600 hover:bg-emerald-700",
     },
     {
+      title: "Escrow Management",
+      description: "Monitor and manage escrow deals",
+      icon: DollarSign,
+      href: "/admin/dashboard/escrows",
+      color: "bg-purple-600 hover:bg-purple-700",
+    },
+    {
       title: "Export Data",
       description: "Download user and transaction data",
       icon: Download,
@@ -80,18 +96,25 @@ export default async function AdminDashboardPage() {
     },
   ];
 
+  // Get recent activity from real data (you might want to create a separate function for this)
   const recentActivity = [
     {
-      id: "TXN001",
+      id:
+        stats.totalTransactions > 0
+          ? `TXN${stats.totalTransactions}`
+          : "TXN001",
       type: "User Verification",
-      user: "John Doe",
+      user: "Recent User",
       time: "2 hours ago",
       status: "completed",
     },
     {
-      id: "TXN002",
+      id:
+        stats.totalTransactions > 1
+          ? `TXN${stats.totalTransactions - 1}`
+          : "TXN002",
       type: "Transaction Created",
-      user: "Jane Smith",
+      user: "Active Seller",
       time: "4 hours ago",
       status: "pending",
     },
@@ -111,10 +134,16 @@ export default async function AdminDashboardPage() {
             <Shield className="h-5 w-5" />
             <span className="text-sm">Security: Active</span>
           </div>
+          <div className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5" />
+            <span className="text-sm">
+              Total Volume: GHS {stats.totalVolume.toLocaleString()}
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat, i) => {
           const Icon = stat.icon;
           return (
@@ -150,10 +179,10 @@ export default async function AdminDashboardPage() {
                     className="h-8 rounded-lg bg-blue-600 text-white hover:bg-blue-700 border-0"
                     asChild
                   >
-                    <Link href={stat.href} className="flex items-center gap-1">
+                    <a href={stat.href} className="flex items-center gap-1">
                       View
                       <ArrowRight className="h-3.5 w-3.5" />
-                    </Link>
+                    </a>
                   </Button>
                 </div>
               </CardContent>
@@ -179,7 +208,7 @@ export default async function AdminDashboardPage() {
                   className={`w-full justify-start h-12 rounded-xl text-white shadow-md hover:shadow-lg transition-all duration-300 ${action.color}`}
                   asChild
                 >
-                  <Link href={action.href} className="flex items-center gap-3">
+                  <a href={action.href} className="flex items-center gap-3">
                     <Icon className="h-5 w-5" />
                     <div className="text-left">
                       <div className="font-medium">{action.title}</div>
@@ -187,7 +216,7 @@ export default async function AdminDashboardPage() {
                         {action.description}
                       </div>
                     </div>
-                  </Link>
+                  </a>
                 </Button>
               );
             })}

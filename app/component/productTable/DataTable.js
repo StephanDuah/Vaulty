@@ -53,7 +53,7 @@ const DataTable = ({ columns, data }) => {
             className="max-w-sm"
           />
 
-          <p className="text-primary">You Have {data?.length} Productss </p>
+          <p className="text-primary">You Have {data?.length} Products </p>
         </div>
         <div className="rounded-md border">
           <Table>
@@ -67,7 +67,7 @@ const DataTable = ({ columns, data }) => {
                           ? null
                           : flexRender(
                               header.column.columnDef.header,
-                              header.getContext()
+                              header.getContext(),
                             )}
                       </TableHead>
                     );
@@ -86,7 +86,7 @@ const DataTable = ({ columns, data }) => {
                       <TableCell key={cell.id}>
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </TableCell>
                     ))}

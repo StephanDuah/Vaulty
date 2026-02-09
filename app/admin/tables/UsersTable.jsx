@@ -37,6 +37,7 @@ import {
 import { useState } from "react";
 import { deleteAllUser } from "@/app/action/AdminAction";
 import { cn } from "@/lib/utils";
+import UserVerificationModal from "../modals/user-verification-modal";
 
 const statusConfig = {
   pending: {
@@ -70,9 +71,8 @@ export default function UsersTable({
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
+  const [verificationModalOpen, setVerificationModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [isVerifying, setIsVerifying] = useState(false);
 
   const handleDelete = async () => {
     const userIdToDelete = selectedUserId;
@@ -90,32 +90,9 @@ export default function UsersTable({
     }
   };
 
-  const handleVerificationAction = async (userId, action, reason = "") => {
-    try {
-      setIsVerifying(true);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      console.log(
-        `User ${userId} verification ${action} with reason: ${reason}`,
-      );
-      setVerificationDialogOpen(false);
-      setSelectedUser(null);
-
-      // In real app, you would refresh the user data here
-      alert(`User verification ${action} successfully!`);
-    } catch (error) {
-      console.error("Error processing verification:", error);
-      alert("Failed to process verification. Please try again.");
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
-  const openVerificationDialog = (user) => {
+  const openVerificationModal = (user) => {
     setSelectedUser(user);
-    setVerificationDialogOpen(true);
+    setVerificationModalOpen(true);
   };
 
   const getStatusBadge = (status) => {
@@ -265,7 +242,7 @@ export default function UsersTable({
                       {user.verification === "pending" && (
                         <Button
                           size="sm"
-                          onClick={() => openVerificationDialog(user)}
+                          onClick={() => openVerificationModal(user)}
                           className="h-9 gap-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
                         >
                           <Eye className="h-4 w-4" />
@@ -339,218 +316,17 @@ export default function UsersTable({
         </DialogContent>
       </Dialog>
 
-      {/* Verification Review Dialog */}
-      <Dialog
-        open={verificationDialogOpen}
-        onOpenChange={setVerificationDialogOpen}
-      >
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl font-bold">
-              <FileText className="h-5 w-5" />
-              Review User Verification Documents
-            </DialogTitle>
-            <DialogDescription>
-              Review the submitted identification documents and verify the
-              user's identity
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedUser && (
-            <div className="space-y-6">
-              {/* User Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                    <UserCheck className="h-4 w-4" />
-                    User Information
-                  </h4>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Full Name
-                      </label>
-                      <p className="mt-1 text-gray-900">
-                        {[selectedUser.firstName, selectedUser.lastName]
-                          .filter(Boolean)
-                          .join(" ")}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Email
-                      </label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Mail className="h-4 w-4 text-gray-500" />
-                        <span className="text-gray-900">
-                          {selectedUser.email}
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        User ID
-                      </label>
-                      <p className="mt-1 text-gray-500">{selectedUser._id}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
-                    Verification Status
-                  </h4>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Current Status
-                      </label>
-                      <div className="mt-1">
-                        {getStatusBadge(selectedUser.verification)}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Member Since
-                      </label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Calendar className="h-4 w-4 text-gray-500" />
-                        <span className="text-gray-900">
-                          {new Date(selectedUser.createdAt).toLocaleDateString(
-                            "en-US",
-                            {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            },
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Documents Section */}
-              <div className="space-y-4">
-                <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Submitted Documents
-                </h4>
-
-                {/* Mock document data - in real app, this would come from the user's verification submission */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="border rounded-lg p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h5 className="font-medium">Identity Document</h5>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="bg-gray-100 rounded-lg h-48 flex items-center justify-center">
-                      <div className="text-center text-gray-500">
-                        <FileText className="h-12 w-12 mx-auto mb-2" />
-                        <p className="text-sm">ID Document Preview</p>
-                        <p className="text-xs mt-1">
-                          Click to view full document
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      <p>
-                        Document Type:{" "}
-                        {selectedUser.documentType || "Not specified"}
-                      </p>
-                      <p>Submitted: {new Date().toLocaleDateString()}</p>
-                    </div>
-                  </div>
-
-                  <div className="border rounded-lg p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h5 className="font-medium">Proof of Address</h5>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="bg-gray-100 rounded-lg h-48 flex items-center justify-center">
-                      <div className="text-center text-gray-500">
-                        <MapPin className="h-12 w-12 mx-auto mb-2" />
-                        <p className="text-sm">Address Proof Preview</p>
-                        <p className="text-xs mt-1">
-                          Click to view full document
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      <p>Document Type: Utility Bill/Bank Statement</p>
-                      <p>Submitted: {new Date().toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Verification Notes */}
-              <div className="space-y-3">
-                <h4 className="font-semibold text-gray-900">
-                  Verification Notes
-                </h4>
-                <textarea
-                  className="w-full p-3 border rounded-lg resize-none"
-                  rows={3}
-                  placeholder="Add notes about this verification (optional)..."
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  onClick={() => setVerificationDialogOpen(false)}
-                  className="rounded-xl border-gray-300 hover:bg-gray-50"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() =>
-                    handleVerificationAction(
-                      selectedUser._id,
-                      "rejected",
-                      "Documents do not meet requirements",
-                    )
-                  }
-                  disabled={isVerifying}
-                  className="rounded-xl"
-                >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  {isVerifying ? "Processing..." : "Reject"}
-                </Button>
-                <Button
-                  className="rounded-xl bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-                  onClick={() =>
-                    handleVerificationAction(selectedUser._id, "approved")
-                  }
-                  disabled={isVerifying}
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  {isVerifying ? "Verifying..." : "Approve Verification"}
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Real Verification Modal */}
+      {verificationModalOpen && selectedUser && (
+        <UserVerificationModal
+          user={selectedUser}
+          isOpen={verificationModalOpen}
+          onClose={() => {
+            setVerificationModalOpen(false);
+            setSelectedUser(null);
+          }}
+        />
+      )}
     </div>
   );
 }

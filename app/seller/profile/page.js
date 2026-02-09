@@ -8,6 +8,7 @@ import { connectDB } from "@/lib/database";
 import User from "@/lib/models/User";
 import { Coins, CheckCircle } from "lucide-react";
 import React from "react";
+import VerificationStatus from "@/app/component/VerificationStatus";
 
 const page = async () => {
   await connectDB();
@@ -19,6 +20,10 @@ const page = async () => {
     <div className="px-0 lg:px-32 flex-col space-y-5">
       <ProfileCard user={santizedUser} />
       <VerificationCard type={santizedUser.verification} id={session.user.id} />
+      <VerificationStatus
+        verification={santizedUser.verification || "not_verified"}
+        showActions={true}
+      />
       <ProfessionalVerification
         userId={session.user.id}
         professionalVerification={santizedUser.professionalVerification || {}}

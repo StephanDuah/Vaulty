@@ -50,6 +50,16 @@ const productSchema = z.object({
   description: z
     .string()
     .min(10, { message: "Description must be at least 10 characters" }),
+  variations: z
+    .array(
+      z.object({
+        name: z.string().min(1, { message: "Variation name is required" }),
+        options: z
+          .array(z.string().min(1, { message: "Option is required" }))
+          .min(1, { message: "At least one option is required" }),
+      }),
+    )
+    .min(1, { message: "At least one variation is required" }),
 });
 
 export default function ProductForm() {
@@ -64,8 +74,9 @@ export default function ProductForm() {
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: "",
-      basePrice: "",
+      basePrice: 0,
       description: "",
+      variations: [{ name: "", options: [""] }],
     },
   });
 
@@ -114,8 +125,16 @@ export default function ProductForm() {
       // Validate variations
       const validVariations = variations.filter(
         (variation) =>
-          variation.name.trim() && variation.options.some((opt) => opt.trim())
+          variation.name.trim() && variation.options.some((opt) => opt.trim()),
       );
+
+      if (validVariations.length === 0) {
+        setSubmitStatus({
+          type: "error",
+          message: "At least one variation with a name and option is required",
+        });
+        return;
+      }
 
       const productData = {
         name: values.name,
@@ -362,7 +381,7 @@ export default function ProductForm() {
                                 updateVariationOption(
                                   varIndex,
                                   optIndex,
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               className="border-primary/20 focus-visible:ring-primary h-11"
@@ -416,9 +435,9 @@ export default function ProductForm() {
                       Ready to Create Your Product?
                     </h3>
                     <p className="text-muted-foreground">
-                      {`Once you submit, your product will be added to your
+                      Once you submit, your product will be added to your
                       inventory and you'll receive a unique product code to
-                      share with buyers.`}
+                      share with buyers.
                     </p>
                   </div>
 
@@ -441,8 +460,8 @@ export default function ProductForm() {
                   </Button>
 
                   <p className="text-sm text-muted-foreground">
-                    {` By creating this product, you agree to TrustVault's seller
-                    terms and conditions.`}
+                    By creating this product, you agree to TrustVault&apos;s
+                    seller terms and conditions.
                   </p>
                 </div>
               </CardContent>

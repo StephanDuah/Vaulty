@@ -2,25 +2,40 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 import React from "react";
 
-const CustomDialog = () => {
+const CustomDialog = ({
+  children,
+  title,
+  description,
+  onConfirm,
+  confirmText = "Confirm",
+  cancelText = "Cancel",
+  confirmVariant = "default",
+}) => {
   return (
     <Dialog>
-      <DialogTrigger>Open</DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Are you absolutely sure?</DialogTitle>
-          <DialogDescription>
-            This action cannot be undone. This will permanently delete your
-            account and remove your data from our servers.
-          </DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => {}}>
+            {cancelText}
+          </Button>
+          <Button variant={confirmVariant} onClick={onConfirm}>
+            {confirmText}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

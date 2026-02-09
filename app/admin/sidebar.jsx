@@ -6,6 +6,7 @@ import {
   Briefcase,
   LayoutDashboard,
   Shield,
+  DollarSign,
 } from "lucide-react";
 import NavButtons from "./components/nav-buttons";
 
@@ -22,6 +23,12 @@ const menuItems = [
     label: "Verification",
     icon: Shield,
     path: "/admin/dashboard/verification",
+  },
+  {
+    id: "earnings",
+    label: "Earnings",
+    icon: DollarSign,
+    path: "/admin/dashboard/earnings",
   },
   {
     id: "transactions",

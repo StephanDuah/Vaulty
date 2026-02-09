@@ -7,7 +7,7 @@ import BussinessCard from "./seller/business-card";
 
 const Content = () => {
   return (
-    <section className="max-h-screen flex flex-col w-full p-0 lg:p-10 ">
+    <section className="min-h-screen flex flex-col w-full p-0 lg:p-10 ">
       <div className="">
         <BussinessCard />
       </div>

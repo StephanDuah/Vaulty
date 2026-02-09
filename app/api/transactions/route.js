@@ -1,5 +1,5 @@
 import { connectDB } from "@/lib/database";
-import { checkSellerDeadline } from "@/lib/logic";
+import { checkBuyerDeadline, checkSellerDeadline } from "@/lib/logic";
 import { getTransactionWithdeadline } from "@/lib/logic/transactions";
 import { sendRefundMessageSeller } from "@/lib/mailing/email";
 import { sendBuyerReminder, sendSMS } from "@/lib/mailing/sms";
@@ -64,13 +64,14 @@ export const GET = async (req) => {
     const date = transactions.map((id) => formatDate(id.createdAt));
     console.log(date);
     await checkSellerDeadline(transactions);
+    await checkBuyerDeadline(transactions);
     console.log("This is a trigger message");
     return NextResponse.json({ message: "Success" });
   } catch (error) {
     console.log(error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };

@@ -11,12 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,8 +35,12 @@ import {
   Users,
   Calendar,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import {
+  getAllTransactions,
+  getTransactionsByStatus,
+} from "@/app/action/AdminAction";
 
 const statusConfig = {
   pending: {
@@ -49,93 +48,78 @@ const statusConfig = {
     className: "bg-yellow-100 text-yellow-800 border-yellow-200",
     icon: Clock,
   },
-  completed: {
-    label: "Completed",
+  shipped: {
+    label: "Shipped",
+    className: "bg-blue-100 text-blue-800 border-blue-200",
+    icon: AlertCircle,
+  },
+  delievered: {
+    label: "Delivered",
     className: "bg-green-100 text-green-800 border-green-200",
     icon: CheckCircle,
   },
-  failed: {
-    label: "Failed",
+  cancelled: {
+    label: "Cancelled",
     className: "bg-red-100 text-red-800 border-red-200",
     icon: XCircle,
   },
-  disputed: {
-    label: "Disputed",
-    className: "bg-orange-100 text-orange-800 border-orange-200",
-    icon: AlertCircle,
-  },
 };
 
-// Mock transaction data
-const mockTransactions = [
-  {
-    _id: "1",
-    transactionId: "TXN001",
-    buyerName: "John Doe",
-    sellerName: "Jane Smith",
-    amount: 1500,
-    status: "completed",
-    createdAt: "2024-01-15T10:30:00Z",
-    product: "MacBook Pro 16\"",
-    type: "product",
-  },
-  {
-    _id: "2",
-    transactionId: "TXN002",
-    buyerName: "Alice Johnson",
-    sellerName: "Bob Wilson",
-    amount: 750,
-    status: "pending",
-    createdAt: "2024-01-16T14:20:00Z",
-    product: "iPhone 15 Pro",
-    type: "product",
-  },
-  {
-    _id: "3",
-    transactionId: "TXN003",
-    buyerName: "Charlie Brown",
-    sellerName: "Diana Prince",
-    amount: 2200,
-    status: "disputed",
-    createdAt: "2024-01-17T09:15:00Z",
-    product: "Sony A7IV Camera",
-    type: "product",
-  },
-  {
-    _id: "4",
-    transactionId: "TXN004",
-    buyerName: "Eve Davis",
-    sellerName: "Frank Miller",
-    amount: 500,
-    status: "failed",
-    createdAt: "2024-01-18T16:45:00Z",
-    product: "iPad Air",
-    type: "product",
-  },
-];
-
 export default function TransactionsTable() {
-  const [transactions] = useState(mockTransactions);
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      setLoading(true);
+      try {
+        const data = await getTransactionsByStatus(
+          statusFilter === "all" ? null : statusFilter,
+        );
+        setTransactions(data);
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, [statusFilter]);
+
   const filteredTransactions = transactions.filter((transaction) => {
     const matchesSearch =
-      transaction.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.buyerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.sellerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.product.toLowerCase().includes(searchTerm.toLowerCase());
+      transaction._id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transaction.buyerDetail?.firstName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      transaction.buyerDetail?.lastName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      transaction.sellerId?.businessName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      transaction.items?.some((item) =>
+        item.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
 
-    const matchesStatus = statusFilter === "all" || transaction.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
 
-  // Calculate statistics
+  // Calculate statistics from real data
   const totalTransactions = transactions.length;
-  const completedTransactions = transactions.filter(t => t.status === "completed").length;
-  const pendingTransactions = transactions.filter(t => t.status === "pending").length;
-  const totalVolume = transactions.reduce((sum, t) => sum + t.amount, 0);
+  const completedTransactions = transactions.filter(
+    (t) => t.transactionStatus === "delievered",
+  ).length;
+  const pendingTransactions = transactions.filter(
+    (t) => t.transactionStatus === "pending",
+  ).length;
+  const totalVolume = transactions.reduce(
+    (sum, t) => sum + (t.totalAmount || 0),
+    0,
+  );
 
   const statsCards = [
     {
@@ -192,6 +176,26 @@ export default function TransactionsTable() {
       </Badge>
     );
   };
+
+  const getProductName = (items) => {
+    if (!items || items.length === 0) return "No items";
+    return items.length === 1
+      ? items[0].name
+      : `${items[0].name} +${items.length - 1} more`;
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading transactions...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -265,17 +269,25 @@ export default function TransactionsTable() {
                     <DropdownMenuItem onClick={() => setStatusFilter("all")}>
                       All Status
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setStatusFilter("pending")}>
+                    <DropdownMenuItem
+                      onClick={() => setStatusFilter("pending")}
+                    >
                       Pending
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setStatusFilter("completed")}>
-                      Completed
+                    <DropdownMenuItem
+                      onClick={() => setStatusFilter("shipped")}
+                    >
+                      Shipped
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setStatusFilter("failed")}>
-                      Failed
+                    <DropdownMenuItem
+                      onClick={() => setStatusFilter("delievered")}
+                    >
+                      Delivered
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setStatusFilter("disputed")}>
-                      Disputed
+                    <DropdownMenuItem
+                      onClick={() => setStatusFilter("cancelled")}
+                    >
+                      Cancelled
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -347,10 +359,10 @@ export default function TransactionsTable() {
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center gap-2">
                             <span className="font-semibold text-gray-900">
-                              {transaction.transactionId}
+                              {transaction._id?.slice(-8) || "N/A"}
                             </span>
                             <Badge variant="outline" className="text-xs">
-                              {transaction.type}
+                              Product
                             </Badge>
                           </div>
                         </TableCell>
@@ -359,42 +371,44 @@ export default function TransactionsTable() {
                             <div className="flex items-center gap-2">
                               <ArrowDownRight className="h-3 w-3 text-red-500" />
                               <span className="text-sm font-medium">
-                                {transaction.buyerName}
+                                {transaction.buyerDetail?.firstName}{" "}
+                                {transaction.buyerDetail?.lastName}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
                               <ArrowUpRight className="h-3 w-3 text-green-500" />
                               <span className="text-sm font-medium">
-                                {transaction.sellerName}
+                                {transaction.sellerId?.businessName ||
+                                  "Unknown Seller"}
                               </span>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className="px-6 py-4">
                           <span className="text-sm text-gray-700">
-                            {transaction.product}
+                            {getProductName(transaction.items)}
                           </span>
                         </TableCell>
                         <TableCell className="px-6 py-4">
                           <span className="font-semibold text-gray-900">
-                            GHS {transaction.amount.toLocaleString()}
+                            GHS{" "}
+                            {(transaction.totalAmount || 0).toLocaleString()}
                           </span>
                         </TableCell>
                         <TableCell className="px-6 py-4">
-                          {getStatusBadge(transaction.status)}
+                          {getStatusBadge(transaction.transactionStatus)}
                         </TableCell>
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center gap-2 text-gray-600">
                             <Calendar className="h-4 w-4" />
                             <span className="text-sm">
-                              {new Date(transaction.createdAt).toLocaleDateString(
-                                "en-US",
-                                {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                }
-                              )}
+                              {new Date(
+                                transaction.createdAt,
+                              ).toLocaleDateString("en-US", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              })}
                             </span>
                           </div>
                         </TableCell>

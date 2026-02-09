@@ -308,6 +308,20 @@ export const getAllUser = async () => {
   }
 };
 
+export const getPendingVerificationUsers = async () => {
+  await connectDB();
+  try {
+    const users = await User.find({
+      verification: { $in: ["pending", "verification"] },
+    }).sort({ createdAt: -1 });
+
+    return JSON.parse(JSON.stringify(users));
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+};
+
 export const uploadProfessionalDocument = async (userId, verificationData) => {
   await connectDB();
   try {

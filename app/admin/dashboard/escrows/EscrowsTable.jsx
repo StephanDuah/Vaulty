@@ -11,12 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,121 +37,83 @@ import {
   Lock,
   Unlock,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import {
+  getAllEscrows,
+  getEscrowsByStatus,
+  releaseEscrowFunds,
+  cancelEscrow,
+} from "@/app/action/AdminAction";
 
 const statusConfig = {
-  active: {
+  held: {
     label: "Active",
     className: "bg-blue-100 text-blue-800 border-blue-200",
     icon: Lock,
-  },
-  completed: {
-    label: "Completed",
-    className: "bg-green-100 text-green-800 border-green-200",
-    icon: CheckCircle,
   },
   released: {
     label: "Released",
     className: "bg-emerald-100 text-emerald-800 border-emerald-200",
     icon: Unlock,
   },
-  disputed: {
-    label: "Disputed",
-    className: "bg-orange-100 text-orange-800 border-orange-200",
-    icon: AlertTriangle,
-  },
-  cancelled: {
-    label: "Cancelled",
+  refunded: {
+    label: "Refunded",
     className: "bg-red-100 text-red-800 border-red-200",
     icon: XCircle,
   },
 };
 
-// Mock escrow data
-const mockEscrows = [
-  {
-    _id: "1",
-    escrowId: "ESC001",
-    transactionId: "TXN001",
-    buyerName: "John Doe",
-    sellerName: "Jane Smith",
-    amount: 1500,
-    status: "active",
-    createdAt: "2024-01-15T10:30:00Z",
-    product: "MacBook Pro 16\"",
-    releaseDate: "2024-01-25T10:30:00Z",
-    daysLeft: 3,
-    disputeReason: null,
-  },
-  {
-    _id: "2",
-    escrowId: "ESC002",
-    transactionId: "TXN002",
-    buyerName: "Alice Johnson",
-    sellerName: "Bob Wilson",
-    amount: 750,
-    status: "completed",
-    createdAt: "2024-01-10T14:20:00Z",
-    product: "iPhone 15 Pro",
-    releaseDate: "2024-01-20T14:20:00Z",
-    daysLeft: 0,
-    disputeReason: null,
-  },
-  {
-    _id: "3",
-    escrowId: "ESC003",
-    transactionId: "TXN003",
-    buyerName: "Charlie Brown",
-    sellerName: "Diana Prince",
-    amount: 2200,
-    status: "disputed",
-    createdAt: "2024-01-17T09:15:00Z",
-    product: "Sony A7IV Camera",
-    releaseDate: "2024-01-27T09:15:00Z",
-    daysLeft: 5,
-    disputeReason: "Product not as described",
-  },
-  {
-    _id: "4",
-    escrowId: "ESC004",
-    transactionId: "TXN004",
-    buyerName: "Eve Davis",
-    sellerName: "Frank Miller",
-    amount: 500,
-    status: "released",
-    createdAt: "2024-01-05T16:45:00Z",
-    product: "iPad Air",
-    releaseDate: "2024-01-15T16:45:00Z",
-    daysLeft: 0,
-    disputeReason: null,
-  },
-];
-
 export default function EscrowsTable() {
-  const [escrows] = useState(mockEscrows);
+  const [escrows, setEscrows] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  useEffect(() => {
+    const fetchEscrows = async () => {
+      setLoading(true);
+      try {
+        const data = await getEscrowsByStatus(
+          statusFilter === "all" ? null : statusFilter,
+        );
+        setEscrows(data);
+      } catch (error) {
+        console.error("Error fetching escrows:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEscrows();
+  }, [statusFilter]);
+
   const filteredEscrows = escrows.filter((escrow) => {
     const matchesSearch =
-      escrow.escrowId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      escrow.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      escrow.buyerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      escrow.sellerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      escrow.product.toLowerCase().includes(searchTerm.toLowerCase());
+      escrow._id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      escrow.transactionId?._id
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      escrow.transactionId?.sellerId?.businessName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      escrow.transactionId?.items?.some((item) =>
+        item.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
 
-    const matchesStatus = statusFilter === "all" || escrow.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
 
-  // Calculate statistics
+  // Calculate statistics from real data
   const totalEscrows = escrows.length;
-  const activeEscrows = escrows.filter(e => e.status === "active").length;
-  const completedEscrows = escrows.filter(e => e.status === "completed" || e.status === "released").length;
-  const disputedEscrows = escrows.filter(e => e.status === "disputed").length;
-  const totalValue = escrows.reduce((sum, e) => sum + e.amount, 0);
+  const activeEscrows = escrows.filter((e) => e.status === "held").length;
+  const completedEscrows = escrows.filter(
+    (e) => e.status === "released",
+  ).length;
+  const totalValue = escrows.reduce(
+    (sum, e) => sum + (e.transactionId?.totalAmount || 0),
+    0,
+  );
 
   const statsCards = [
     {
@@ -214,35 +171,105 @@ export default function EscrowsTable() {
     );
   };
 
+  const getDaysLeft = (heldAt) => {
+    if (!heldAt) return 0;
+    const daysDiff = Math.ceil(
+      (Date.now() - new Date(heldAt).getTime()) / (1000 * 60 * 60 * 24),
+    );
+    return Math.max(0, 30 - daysDiff); // Assuming 30-day escrow period
+  };
+
   const getDaysLeftBadge = (daysLeft, status) => {
-    if (status === "completed" || status === "released" || status === "cancelled") {
+    if (status === "released" || status === "refunded") {
       return (
-        <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200">
+        <Badge
+          variant="outline"
+          className="bg-gray-100 text-gray-800 border-gray-200"
+        >
           Completed
         </Badge>
       );
     }
-    
+
     if (daysLeft <= 1) {
       return (
-        <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200">
+        <Badge
+          variant="outline"
+          className="bg-red-100 text-red-800 border-red-200"
+        >
           {daysLeft} day left
         </Badge>
       );
     } else if (daysLeft <= 3) {
       return (
-        <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200">
+        <Badge
+          variant="outline"
+          className="bg-orange-100 text-orange-800 border-orange-200"
+        >
           {daysLeft} days left
         </Badge>
       );
     } else {
       return (
-        <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
+        <Badge
+          variant="outline"
+          className="bg-green-100 text-green-800 border-green-200"
+        >
           {daysLeft} days left
         </Badge>
       );
     }
   };
+
+  const handleReleaseFunds = async (escrowId) => {
+    try {
+      const result = await releaseEscrowFunds(escrowId);
+      if (result.status) {
+        // Refresh the escrows list
+        const data = await getEscrowsByStatus(
+          statusFilter === "all" ? null : statusFilter,
+        );
+        setEscrows(data);
+      }
+    } catch (error) {
+      console.error("Error releasing funds:", error);
+    }
+  };
+
+  const handleCancelEscrow = async (escrowId) => {
+    try {
+      const result = await cancelEscrow(escrowId);
+      if (result.status) {
+        // Refresh the escrows list
+        const data = await getEscrowsByStatus(
+          statusFilter === "all" ? null : statusFilter,
+        );
+        setEscrows(data);
+      }
+    } catch (error) {
+      console.error("Error cancelling escrow:", error);
+    }
+  };
+
+  const getProductName = (items) => {
+    if (!items || items.length === 0) return "No items";
+    return items.length === 1
+      ? items[0].name
+      : `${items[0].name} +${items.length - 1} more`;
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading escrows...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -316,20 +343,18 @@ export default function EscrowsTable() {
                     <DropdownMenuItem onClick={() => setStatusFilter("all")}>
                       All Status
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setStatusFilter("active")}>
+                    <DropdownMenuItem onClick={() => setStatusFilter("held")}>
                       Active
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setStatusFilter("completed")}>
-                      Completed
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setStatusFilter("released")}>
+                    <DropdownMenuItem
+                      onClick={() => setStatusFilter("released")}
+                    >
                       Released
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setStatusFilter("disputed")}>
-                      Disputed
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setStatusFilter("cancelled")}>
-                      Cancelled
+                    <DropdownMenuItem
+                      onClick={() => setStatusFilter("refunded")}
+                    >
+                      Refunded
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -393,120 +418,129 @@ export default function EscrowsTable() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredEscrows.map((escrow) => (
-                      <TableRow
-                        key={escrow._id}
-                        className="border-b border-gray-100 transition-all duration-200 hover:bg-blue-50 hover:shadow-sm"
-                      >
-                        <TableCell className="px-6 py-4">
-                          <div className="space-y-1">
-                            <div className="font-semibold text-gray-900">
-                              {escrow.escrowId}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {escrow.transactionId}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="px-6 py-4">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                                <span className="text-xs font-medium text-blue-600">B</span>
+                    filteredEscrows.map((escrow) => {
+                      const daysLeft = getDaysLeft(escrow.heldAt);
+                      return (
+                        <TableRow
+                          key={escrow._id}
+                          className="border-b border-gray-100 transition-all duration-200 hover:bg-blue-50 hover:shadow-sm"
+                        >
+                          <TableCell className="px-6 py-4">
+                            <div className="space-y-1">
+                              <div className="font-semibold text-gray-900">
+                                {escrow._id?.slice(-8) || "N/A"}
                               </div>
-                              <span className="text-sm font-medium">
-                                {escrow.buyerName}
+                              <div className="text-xs text-gray-500">
+                                {escrow.transactionId?._id?.slice(-8) || "N/A"}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="px-6 py-4">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                                  <span className="text-xs font-medium text-blue-600">
+                                    B
+                                  </span>
+                                </div>
+                                <span className="text-sm font-medium">
+                                  {escrow.transactionId?.buyerDetail?.firstName}{" "}
+                                  {escrow.transactionId?.buyerDetail?.lastName}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                                  <span className="text-xs font-medium text-green-600">
+                                    S
+                                  </span>
+                                </div>
+                                <span className="text-sm font-medium">
+                                  {escrow.transactionId?.sellerId
+                                    ?.businessName || "Unknown Seller"}
+                                </span>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <Package className="h-4 w-4 text-gray-400" />
+                              <span className="text-sm text-gray-700">
+                                {getProductName(escrow.transactionId?.items)}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                                <span className="text-xs font-medium text-green-600">S</span>
-                              </div>
-                              <span className="text-sm font-medium">
-                                {escrow.sellerName}
-                              </span>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <Package className="h-4 w-4 text-gray-400" />
-                            <span className="text-sm text-gray-700">
-                              {escrow.product}
+                          </TableCell>
+                          <TableCell className="px-6 py-4">
+                            <span className="font-semibold text-gray-900">
+                              GHS{" "}
+                              {(
+                                escrow.transactionId?.totalAmount || 0
+                              ).toLocaleString()}
                             </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="px-6 py-4">
-                          <span className="font-semibold text-gray-900">
-                            GHS {escrow.amount.toLocaleString()}
-                          </span>
-                        </TableCell>
-                        <TableCell className="px-6 py-4">
-                          <div className="space-y-2">
-                            {getStatusBadge(escrow.status)}
-                            {escrow.disputeReason && (
-                              <div className="text-xs text-red-600 max-w-xs truncate">
-                                {escrow.disputeReason}
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="px-6 py-4">
-                          {getDaysLeftBadge(escrow.daysLeft, escrow.status)}
-                        </TableCell>
-                        <TableCell className="px-6 py-4">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-9 gap-2"
-                            >
-                              <Eye className="h-4 w-4" />
-                              View
-                            </Button>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  size="icon"
-                                  variant="outline"
-                                  className="h-9 w-9"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  View Details
-                                </DropdownMenuItem>
-                                {escrow.status === "active" && (
-                                  <>
-                                    <DropdownMenuItem>
-                                      <Unlock className="h-4 w-4 mr-2" />
-                                      Release Funds
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                      <XCircle className="h-4 w-4 mr-2" />
-                                      Cancel Escrow
-                                    </DropdownMenuItem>
-                                  </>
-                                )}
-                                {escrow.status === "disputed" && (
+                          </TableCell>
+                          <TableCell className="px-6 py-4">
+                            <div className="space-y-2">
+                              {getStatusBadge(escrow.status)}
+                            </div>
+                          </TableCell>
+                          <TableCell className="px-6 py-4">
+                            {getDaysLeftBadge(daysLeft, escrow.status)}
+                          </TableCell>
+                          <TableCell className="px-6 py-4">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-9 gap-2"
+                              >
+                                <Eye className="h-4 w-4" />
+                                View
+                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    className="h-9 w-9"
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
                                   <DropdownMenuItem>
-                                    <CheckCircle className="h-4 w-4 mr-2" />
-                                    Resolve Dispute
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    View Details
                                   </DropdownMenuItem>
-                                )}
-                                <DropdownMenuItem>
-                                  <Download className="h-4 w-4 mr-2" />
-                                  Download Report
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
+                                  {escrow.status === "held" && (
+                                    <>
+                                      <DropdownMenuItem
+                                        onClick={() =>
+                                          handleReleaseFunds(escrow._id)
+                                        }
+                                      >
+                                        <Unlock className="h-4 w-4 mr-2" />
+                                        Release Funds
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={() =>
+                                          handleCancelEscrow(escrow._id)
+                                        }
+                                      >
+                                        <XCircle className="h-4 w-4 mr-2" />
+                                        Cancel Escrow
+                                      </DropdownMenuItem>
+                                    </>
+                                  )}
+                                  <DropdownMenuItem>
+                                    <Download className="h-4 w-4 mr-2" />
+                                    Download Report
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                   )}
                 </TableBody>
               </Table>
