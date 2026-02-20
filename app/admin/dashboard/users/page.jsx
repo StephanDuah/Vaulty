@@ -7,6 +7,8 @@ import {
   getPendingVerificationUsers,
 } from "@/app/action/UserActions";
 
+export const dynamic = "force-dynamic";
+
 const page = async () => {
   await connectDB();
 

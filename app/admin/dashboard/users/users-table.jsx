@@ -20,24 +20,24 @@ import { getAllUser } from "@/app/action/UserActions";
 import { deleteAllUser, verifyUser } from "@/app/action/AdminAction";
 
 export default function UsersPage({ allusers, pendingUsers }) {
-  const [users, setUsers] = useState(allusers);
+  const [users, setUsers] = useState(allusers || []);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
 
   const filteredUsers = users.filter(
     (user) =>
-      user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()),
+      user?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user?.email?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // Calculate statistics
   const totalUsers = users.length;
   const verifiedUsers = users.filter(
-    (user) => user.verification === "verified",
+    (user) => user?.verification === "verified",
   ).length;
   const pendingUsersCount = users.filter(
-    (user) => user.verification === "pending",
+    (user) => user?.verification === "pending",
   ).length;
   const verificationRate =
     totalUsers > 0 ? ((verifiedUsers / totalUsers) * 100).toFixed(1) : 0;

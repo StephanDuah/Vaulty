@@ -88,7 +88,7 @@ export default function UserVerificationForm() {
         });
 
         // Reset form
-        setFormData({
+        setFormDataState({
           documentType: "",
           documentNumber: "",
           fullName: "",

@@ -256,6 +256,7 @@ export const resendOtp = async (email) => {
 };
 
 export const getUserby = cache(async (email) => {
+  await connectDB();
   try {
     const user = await User.findOne({ email });
     if (!user) {
