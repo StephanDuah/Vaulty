@@ -1,91 +1,83 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  FileText, 
-  Download, 
-  Eye, 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle, 
+import {
+  FileText,
+  Download,
+  Eye,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
   Clock,
   User,
   Calendar,
   Mail,
-  MapPin
+  MapPin,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  getPendingProfessionalVerificationUsers,
+  verifyUser,
+  rejectUser,
+} from "@/app/action/AdminAction";
 
 export default function AdminVerificationDashboard() {
   const [selectedVerification, setSelectedVerification] = useState(null);
   const [showDocumentDialog, setShowDocumentDialog] = useState(false);
+  const [pendingVerifications, setPendingVerifications] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data for pending verifications
-  const pendingVerifications = [
-    {
-      id: "1",
-      userId: "user123",
-      userName: "John Doe",
-      userEmail: "john.doe@email.com",
-      documentType: "Passport",
-      documentNumber: "P123456789",
-      submittedDate: "2024-02-05",
-      status: "pending",
-      documents: [
-        { name: "passport_front.jpg", type: "image", url: "#" },
-        { name: "passport_back.jpg", type: "image", url: "#" }
-      ],
-      userInfo: {
-        fullName: "John Michael Doe",
-        dateOfBirth: "1990-05-15",
-        address: "123 Main St, New York, NY 10001"
-      }
-    },
-    {
-      id: "2", 
-      userId: "user456",
-      userName: "Jane Smith",
-      userEmail: "jane.smith@email.com",
-      documentType: "National ID",
-      documentNumber: "ID987654321",
-      submittedDate: "2024-02-04",
-      status: "pending",
-      documents: [
-        { name: "id_card.jpg", type: "image", url: "#" }
-      ],
-      userInfo: {
-        fullName: "Jane Elizabeth Smith",
-        dateOfBirth: "1985-08-22",
-        address: "456 Oak Ave, Los Angeles, CA 90001"
-      }
-    }
-  ];
+  useEffect(() => {
+    const fetchPendingVerifications = async () => {
+      try {
+        const users = await getPendingProfessionalVerificationUsers();
 
-  const recentVerifications = [
-    {
-      id: "3",
-      userName: "Robert Johnson",
-      documentType: "Driver's License",
-      status: "approved",
-      verifiedDate: "2024-02-03",
-      verifiedBy: "Admin User"
-    },
-    {
-      id: "4",
-      userName: "Emily Brown",
-      documentType: "Passport", 
-      status: "rejected",
-      verifiedDate: "2024-02-02",
-      verifiedBy: "Admin User",
-      reason: "Document quality too low"
-    }
-  ];
+        // Transform the data to match the expected format
+        const transformedData = users.map((user) => ({
+          id: user._id,
+          userId: user._id,
+          userName: `${user.firstName} ${user.lastName}`,
+          userEmail: user.email,
+          documentType:
+            user.professionalVerification?.profession ||
+            "Professional Verification",
+          documentNumber: user.professionalVerification?.licenseNumber || "N/A",
+          submittedDate:
+            user.professionalVerification?.submittedAt || user.createdAt,
+          status: user.professionalVerification?.status || "Pending",
+          documents: user.professionalVerification?.documents || [],
+          userInfo: {
+            fullName: `${user.firstName} ${user.lastName}`,
+            businessName: user.professionalVerification?.businessName || "",
+            profession: user.professionalVerification?.profession || "",
+            experience: user.professionalVerification?.experience || "",
+          },
+        }));
+
+        setPendingVerifications(transformedData);
+      } catch (error) {
+        console.error("Failed to fetch pending verifications:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPendingVerifications();
+  }, []);
+
+  const recentVerifications = []; // TODO: Implement recent verifications fetch
 
   const getStatusBadge = (status) => {
     const configs = {
@@ -93,20 +85,20 @@ export default function AdminVerificationDashboard() {
         variant: "secondary",
         icon: Clock,
         label: "Pending Review",
-        className: "bg-yellow-100 text-yellow-800 border-yellow-200"
+        className: "bg-yellow-100 text-yellow-800 border-yellow-200",
       },
       approved: {
         variant: "default",
         icon: CheckCircle,
         label: "Approved",
-        className: "bg-green-100 text-green-800 border-green-200"
+        className: "bg-green-100 text-green-800 border-green-200",
       },
       rejected: {
         variant: "destructive",
         icon: XCircle,
         label: "Rejected",
-        className: "bg-red-100 text-red-800 border-red-200"
-      }
+        className: "bg-red-100 text-red-800 border-red-200",
+      },
     };
 
     const config = configs[status] || configs.pending;
@@ -120,18 +112,51 @@ export default function AdminVerificationDashboard() {
     );
   };
 
-  const handleVerificationAction = async (verificationId, action, reason = "") => {
+  const handleVerificationAction = async (
+    verificationId,
+    action,
+    reason = "",
+  ) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      console.log(`Verification ${verificationId} ${action} with reason: ${reason}`);
-      setShowDocumentDialog(false);
-      setSelectedVerification(null);
-      
-      // In real app, you would refresh the data here
-      alert(`Verification ${action} successfully!`);
-      
+      let result;
+
+      if (action === "approved") {
+        result = await verifyUser(verificationId);
+      } else if (action === "rejected") {
+        result = await rejectUser(verificationId, reason);
+      }
+
+      if (result?.status) {
+        setShowDocumentDialog(false);
+        setSelectedVerification(null);
+
+        // Refresh the pending verifications list
+        const users = await getPendingProfessionalVerificationUsers();
+        const transformedData = users.map((user) => ({
+          id: user._id,
+          userId: user._id,
+          userName: `${user.firstName} ${user.lastName}`,
+          userEmail: user.email,
+          documentType:
+            user.professionalVerification?.profession ||
+            "Professional Verification",
+          documentNumber: user.professionalVerification?.licenseNumber || "N/A",
+          submittedDate:
+            user.professionalVerification?.submittedAt || user.createdAt,
+          status: user.professionalVerification?.status || "Pending",
+          documents: user.professionalVerification?.documents || [],
+          userInfo: {
+            fullName: `${user.firstName} ${user.lastName}`,
+            businessName: user.professionalVerification?.businessName || "",
+            profession: user.professionalVerification?.profession || "",
+            experience: user.professionalVerification?.experience || "",
+          },
+        }));
+
+        setPendingVerifications(transformedData);
+      } else {
+        alert(result?.message || `Failed to ${action} verification`);
+      }
     } catch (error) {
       console.error("Error processing verification:", error);
       alert("Failed to process verification. Please try again.");
@@ -148,55 +173,85 @@ export default function AdminVerificationDashboard() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">User Verification</h1>
-          <p className="text-gray-600 mt-1">Review and approve user identification documents</p>
+          <p className="text-gray-600 mt-1">
+            Review and approve user identification documents
+          </p>
         </div>
         <div className="flex gap-2">
           <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
             {pendingVerifications.length} Pending
           </Badge>
           <Badge variant="outline" className="bg-green-100 text-green-800">
-            {recentVerifications.filter(v => v.status === 'approved').length} Approved Today
+            {recentVerifications.filter((v) => v.status === "approved").length}{" "}
+            Approved Today
           </Badge>
         </div>
       </div>
 
       <Tabs defaultValue="pending" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="pending">Pending Review ({pendingVerifications.length})</TabsTrigger>
+          <TabsTrigger value="pending">
+            Pending Review ({pendingVerifications.length})
+          </TabsTrigger>
           <TabsTrigger value="recent">Recent Activity</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pending" className="space-y-4">
-          {pendingVerifications.length === 0 ? (
+          {loading ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+                <h3 className="text-lg font-semibold text-gray-700">
+                  Loading Verifications
+                </h3>
+                <p className="text-gray-500 text-center mt-2">
+                  Fetching pending professional verification submissions...
+                </p>
+              </CardContent>
+            </Card>
+          ) : pendingVerifications.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <FileText className="h-16 w-16 text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-700">No Pending Verifications</h3>
+                <h3 className="text-lg font-semibold text-gray-700">
+                  No Pending Verifications
+                </h3>
                 <p className="text-gray-500 text-center mt-2">
-                  All user verifications are up to date. Check back later for new submissions.
+                  All user verifications are up to date. Check back later for
+                  new submissions.
                 </p>
               </CardContent>
             </Card>
           ) : (
             <div className="grid gap-4">
               {pendingVerifications.map((verification) => (
-                <Card key={verification.id} className="hover:shadow-md transition-shadow">
+                <Card
+                  key={verification.id}
+                  className="hover:shadow-md transition-shadow"
+                >
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-4">
                         <Avatar className="h-12 w-12">
-                          <AvatarImage src={`/api/placeholder/user/${verification.userId}`} />
+                          <AvatarImage
+                            src={`/api/placeholder/user/${verification.userId}`}
+                          />
                           <AvatarFallback>
-                            {verification.userName.split(' ').map(n => n[0]).join('')}
+                            {verification.userName
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
                           </AvatarFallback>
                         </Avatar>
-                        
+
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-lg">{verification.userName}</h3>
+                            <h3 className="font-semibold text-lg">
+                              {verification.userName}
+                            </h3>
                             {getStatusBadge(verification.status)}
                           </div>
-                          
+
                           <div className="flex items-center gap-4 text-sm text-gray-600">
                             <div className="flex items-center gap-1">
                               <Mail className="h-4 w-4" />
@@ -213,7 +268,10 @@ export default function AdminVerificationDashboard() {
                           </div>
 
                           <div className="text-sm">
-                            <span className="font-medium">Document Number:</span> {verification.documentNumber}
+                            <span className="font-medium">
+                              Document Number:
+                            </span>{" "}
+                            {verification.documentNumber}
                           </div>
                         </div>
                       </div>
@@ -245,16 +303,23 @@ export default function AdminVerificationDashboard() {
                     <div className="flex items-center gap-4">
                       <Avatar className="h-10 w-10">
                         <AvatarFallback>
-                          {verification.userName.split(' ').map(n => n[0]).join('')}
+                          {verification.userName
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
                         </AvatarFallback>
                       </Avatar>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h4 className="font-medium">{verification.userName}</h4>
+                          <h4 className="font-medium">
+                            {verification.userName}
+                          </h4>
                           {getStatusBadge(verification.status)}
                         </div>
                         <div className="text-sm text-gray-600">
-                          {verification.documentType} • {verification.verifiedDate} • by {verification.verifiedBy}
+                          {verification.documentType} •{" "}
+                          {verification.verifiedDate} • by{" "}
+                          {verification.verifiedBy}
                         </div>
                         {verification.reason && (
                           <div className="text-sm text-red-600 mt-1">
@@ -277,7 +342,8 @@ export default function AdminVerificationDashboard() {
           <DialogHeader>
             <DialogTitle>Review Verification Documents</DialogTitle>
             <DialogDescription>
-              Review the submitted documents and user information for verification
+              Review the submitted documents and user information for
+              verification
             </DialogDescription>
           </DialogHeader>
 
@@ -294,27 +360,65 @@ export default function AdminVerificationDashboard() {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Full Name</label>
-                      <p className="mt-1">{selectedVerification.userInfo.fullName}</p>
+                      <label className="text-sm font-medium text-gray-700">
+                        Full Name
+                      </label>
+                      <p className="mt-1">
+                        {selectedVerification.userInfo.fullName}
+                      </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Date of Birth</label>
-                      <p className="mt-1">{selectedVerification.userInfo.dateOfBirth}</p>
+                      <label className="text-sm font-medium text-gray-700">
+                        Email
+                      </label>
+                      <p className="mt-1">{selectedVerification.userEmail}</p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Document Type</label>
-                      <p className="mt-1">{selectedVerification.documentType}</p>
+                      <label className="text-sm font-medium text-gray-700">
+                        Profession
+                      </label>
+                      <p className="mt-1">
+                        {selectedVerification.userInfo.profession}
+                      </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Document Number</label>
-                      <p className="mt-1">{selectedVerification.documentNumber}</p>
+                      <label className="text-sm font-medium text-gray-700">
+                        Business Name
+                      </label>
+                      <p className="mt-1">
+                        {selectedVerification.userInfo.businessName ||
+                          "Not specified"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        License Number
+                      </label>
+                      <p className="mt-1">
+                        {selectedVerification.documentNumber}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Experience
+                      </label>
+                      <p className="mt-1">
+                        {selectedVerification.userInfo.experience ||
+                          "Not specified"}
+                      </p>
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Address</label>
+                    <label className="text-sm font-medium text-gray-700">
+                      Submitted Date
+                    </label>
                     <div className="flex items-center gap-2 mt-1">
-                      <MapPin className="h-4 w-4 text-gray-500" />
-                      <p>{selectedVerification.userInfo.address}</p>
+                      <Calendar className="h-4 w-4 text-gray-500" />
+                      <p>
+                        {new Date(
+                          selectedVerification.submittedDate,
+                        ).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -359,14 +463,25 @@ export default function AdminVerificationDashboard() {
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <Button
                   variant="destructive"
-                  onClick={() => handleVerificationAction(selectedVerification.id, 'rejected', 'Document verification failed')}
+                  onClick={() =>
+                    handleVerificationAction(
+                      selectedVerification.id,
+                      "rejected",
+                      "Document verification failed",
+                    )
+                  }
                 >
                   <XCircle className="h-4 w-4 mr-2" />
                   Reject
                 </Button>
                 <Button
                   className="bg-green-600 hover:bg-green-700"
-                  onClick={() => handleVerificationAction(selectedVerification.id, 'approved')}
+                  onClick={() =>
+                    handleVerificationAction(
+                      selectedVerification.id,
+                      "approved",
+                    )
+                  }
                 >
                   <CheckCircle className="h-4 w-4 mr-2" />
                   Approve

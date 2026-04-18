@@ -13,17 +13,17 @@ const BussinessCard = async () => {
   }
 
   return (
-    <div className="w-full p-5 lg:py-10 lg:px-20 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-2xl shadow-lg space-y-10 text-white flex flex-col lg:flex-row items-center justify-between">
+    <div className="w-full p-5 lg:py-10 lg:px-20 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-2xl shadow-lg text-white flex flex-col lg:flex-row items-center justify-between">
       <div className="space-y-5">
-        <h4 className="text-3xl font-bold ">
+        <h4 className="text-3xl font-bold">
           Welcome {selectedUser.firstName} {selectedUser.lastName}
         </h4>
-        <p className=" capitalize">
+        <p className="capitalize">
           <span>Business name:</span> <span>{selectedUser.businessName}</span>
         </p>
 
         {/* Check if seller is verified */}
-        {selectedUser.professionalVerification?.status !== "verified" ? (
+        {selectedUser.verification !== "Verified" ? (
           <div className="bg-red-500/20 border border-red-500 rounded-lg p-4 mb-4">
             <p className="text-red-100 text-sm font-medium">
               ⚠️ Your account is not verified. You must complete professional
@@ -57,7 +57,7 @@ const BussinessCard = async () => {
       </div>
 
       {/* Only show QR code if seller is verified */}
-      {selectedUser.professionalVerification?.status === "verified" && (
+      {selectedUser.professionalVerification?.status === "Verified" && (
         <QrcodeGenerator
           link={`${process.env.BASEURL}/checkout?business=${selectedUser.slug}`}
         />

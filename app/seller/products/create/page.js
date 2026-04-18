@@ -12,7 +12,7 @@ const page = async () => {
   // Check if seller is verified
   await connectDB();
   const seller = await User.findById(id);
-  if (!seller || seller.verification !== "verified") {
+  if (!seller || seller.verification !== "Verified") {
     redirect("/seller/profile?verification=required");
   }
 

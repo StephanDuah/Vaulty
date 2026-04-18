@@ -1,38 +1,57 @@
 import React from "react";
 import Wrapper from "./dashboard-card";
-import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
+
 import { auth } from "@/auth";
 import { getProfile } from "@/lib/logic/user";
-import { getTransactionWithdeadline } from "@/lib/logic/transactions";
+
 import { displayCurrency } from "@/lib/utils";
 
 const getProfileData = async () => {
   const session = await auth();
-  if (!session) return <div>I have got nothing</div>;
+  if (!session) return null;
   const id = session?.user?.id;
-  const {
-    TotalTransactions,
-    PendingTransactions,
-    SuccessfullTransactions,
-    FailedTransactions,
-    EscrowScore,
-    TotalAmount,
-  } = await getProfile(id);
 
-  return {
-    profile: [
-      { name: "Total Transactions", value: TotalTransactions },
-      { name: "Successful Transactions", value: SuccessfullTransactions },
-      { name: "Failed Transactions", value: FailedTransactions },
-      { name: "Pending Transactions", value: PendingTransactions },
-    ],
-    EscrowScore,
-    TotalAmount,
-  };
+  try {
+    const {
+      TotalTransactions,
+      PendingTransactions,
+      SuccessfullTransactions,
+      FailedTransactions,
+      EscrowScore,
+      TotalAmount,
+    } = await getProfile(id);
+
+    return {
+      profile: [
+        { name: "Total Transactions", value: TotalTransactions || 0 },
+        {
+          name: "Successful Transactions",
+          value: SuccessfullTransactions || 0,
+        },
+        { name: "Failed Transactions", value: FailedTransactions || 0 },
+        { name: "Pending Transactions", value: PendingTransactions || 0 },
+      ],
+      EscrowScore: EscrowScore || 0,
+      TotalAmount: TotalAmount || 0,
+    };
+  } catch (error) {
+    console.error("Error fetching profile data:", error);
+    return {
+      profile: [
+        { name: "Total Transactions", value: 0 },
+        { name: "Successful Transactions", value: 0 },
+        { name: "Failed Transactions", value: 0 },
+        { name: "Pending Transactions", value: 0 },
+      ],
+      EscrowScore: 0,
+      TotalAmount: 0,
+    };
+  }
 };
 
 const ProfileCard = async () => {
   const profileData = await getProfileData();
+  if (!profileData) return <div>Not Authenticated</div>;
 
   return (
     <Wrapper>
@@ -61,7 +80,7 @@ const ProfileCard = async () => {
         <div className="flex-col gap-2">
           {profileData.profile.map((item, index) => (
             <div
-              key={index}
+              key={item.name}
               className="flex items-center justify-between p-2 border-b border-zinc-100 dark:border-zinc-600"
             >
               <p className="text-sm text-zinc-600 dark:text-zinc-400">

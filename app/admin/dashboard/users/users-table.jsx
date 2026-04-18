@@ -34,10 +34,10 @@ export default function UsersPage({ allusers, pendingUsers }) {
   // Calculate statistics
   const totalUsers = users.length;
   const verifiedUsers = users.filter(
-    (user) => user?.verification === "verified",
+    (user) => user?.verification === "Verified",
   ).length;
   const pendingUsersCount = users.filter(
-    (user) => user?.verification === "pending",
+    (user) => user?.verification === "Pending",
   ).length;
   const verificationRate =
     totalUsers > 0 ? ((verifiedUsers / totalUsers) * 100).toFixed(1) : 0;
@@ -88,6 +88,12 @@ export default function UsersPage({ allusers, pendingUsers }) {
   const handleConfirmVerification = async (notes) => {
     if (selectedUser) {
       const response = await verifyUser(selectedUser._id);
+      sendUserVeficationMessage(
+        selectedUser.phoneNumber,
+        "Hi " +
+          selectedUser.firstName +
+          ", your account has been verified by HiVaulty. Happy Selling",
+      );
       if (response.status) {
         // Update the user in local state
         setUsers(
@@ -95,7 +101,7 @@ export default function UsersPage({ allusers, pendingUsers }) {
             user._id === selectedUser._id
               ? {
                   ...user,
-                  verification: "verified",
+                  verification: "Verified",
                   kyc: {
                     ...user.kyc,
                     verificationDate: new Date().toISOString(),

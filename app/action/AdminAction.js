@@ -6,6 +6,23 @@ import { Transaction } from "@/lib/models/Transaction";
 import { Escrow } from "@/lib/models/Escrow";
 import { createVerificationStatusNotification } from "@/app/action/NotificationAction";
 
+export const getPendingProfessionalVerificationUsers = async () => {
+  await connectDB();
+  try {
+    const users = await User.find({
+      verification: "Pending",
+      "professionalVerification.documents.0": { $exists: true },
+    })
+      .select("firstName lastName email professionalVerification createdAt")
+      .lean();
+
+    return JSON.parse(JSON.stringify(users));
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+};
+
 export const getAdminStats = async () => {
   await connectDB();
   const [
@@ -21,8 +38,8 @@ export const getAdminStats = async () => {
     totalVolume,
   ] = await Promise.all([
     User.countDocuments(),
-    User.countDocuments({ verification: "pending" }),
-    User.countDocuments({ verification: "verified" }),
+    User.countDocuments({ verification: "Pending" }),
+    User.countDocuments({ verification: "Verified" }),
     Transaction.countDocuments(),
     Transaction.countDocuments({ transactionStatus: "delievered" }),
     Transaction.countDocuments({ transactionStatus: "pending" }),
@@ -127,18 +144,26 @@ export const verifyUser = async (id) => {
   try {
     const user = await User.findById(id);
     if (!user) throw new Error("User not found");
-    user.verification = "verified";
-    user.professionalVerification.status = "verified";
-    user.professionalVerification.verifiedAt = new Date();
+
+    // Check if user has professional verification data
+    if (
+      user.professionalVerification &&
+      user.professionalVerification.documents?.length > 0
+    ) {
+      user.verification = "Verified";
+      user.professionalVerification.verifiedAt = new Date();
+    } else {
+      user.verification = "id_verified";
+    }
+
     await user.save();
 
     // Create notification for user
     await createVerificationStatusNotification(id, true);
 
-    updateTag("user");
-    return { status: true, message: "verification complete" };
+    return { status: true, message: "User verified successfully" };
   } catch (error) {
-    console.log(error);
+    console.error("Error verifying user:", error);
     return { status: false, message: error.message };
   }
 };
@@ -150,7 +175,6 @@ export const rejectUser = async (id, reason) => {
     if (!user) throw new Error("User not found");
     user.verification = "failed";
     if (user.professionalVerification) {
-      user.professionalVerification.status = "failed";
       user.professionalVerification.rejectionReason = reason;
       user.professionalVerification.verifiedAt = new Date();
     }
@@ -160,9 +184,9 @@ export const rejectUser = async (id, reason) => {
     await createVerificationStatusNotification(id, false);
 
     updateTag("user");
-    return { status: true, message: "verification rejected" };
+    return { status: true, message: "User rejected successfully" };
   } catch (error) {
-    console.log(error);
+    console.error("Error rejecting user:", error);
     return { status: false, message: error.message };
   }
 };

@@ -22,6 +22,68 @@ export default function UserVerificationModal({ user, isOpen, onClose }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
 
+  const handleViewDocument = (doc) => {
+    console.log("handleViewDocument called with:", doc);
+
+    if (!doc) {
+      console.error("Document is undefined");
+      toast.error("Document not available");
+      return;
+    }
+
+    try {
+      // Use Cloudinary URL if available, otherwise fallback to base64 data
+      const documentUrl = doc.url || doc.data;
+
+      if (documentUrl) {
+        if (
+          documentUrl.startsWith("data:image/") ||
+          /\.(jpg|jpeg|png|gif|webp)$/i.test(documentUrl)
+        ) {
+          console.log("Opening image document:", doc.name);
+          // Open image in new tab
+          const newWindow = window.open();
+          if (newWindow) {
+            newWindow.document.write(
+              `<img src="${documentUrl}" style="max-width:100%; max-height:100%;" />`,
+            );
+            newWindow.document.title = doc.name;
+          } else {
+            console.error("Failed to open new window");
+            toast.error("Failed to open document preview");
+          }
+        } else {
+          console.log("Opening non-image document:", doc.name);
+          // For non-image documents, create a downloadable link
+          const link = document.createElement("a");
+          link.href = documentUrl;
+          link.download = doc.name;
+          link.target = "_blank";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+      } else {
+        console.warn("Document has no URL or data:", doc);
+        toast.error("Document URL not available");
+      }
+    } catch (error) {
+      console.error("Error viewing document:", error);
+      toast.error("Failed to view document");
+    }
+  };
+
+  const handleDownloadDocument = (doc) => {
+    if (doc.url) {
+      const link = document.createElement("a");
+      link.href = doc.url;
+      link.download = doc.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   const handleApprove = async () => {
     setIsSubmitting(true);
     try {
@@ -126,43 +188,86 @@ export default function UserVerificationModal({ user, isOpen, onClose }) {
                 user.professionalVerification.documents.length > 0 && (
                   <div className="border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
-                      <h5 className="font-medium">Identity Document</h5>
+                      <h5 className="font-medium">Professional Documents</h5>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleViewDocument(doc)}
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDownloadDocument(doc)}
+                        >
                           <Download className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
-                    <div className="bg-gray-100 rounded-lg h-48 flex items-center justify-center">
-                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm">Document Preview</p>
-                      <p className="text-xs mt-1">
-                        {user.professionalVerification.documents[0]?.type ||
-                          "ID Document"}
-                      </p>
-                    </div>
-                    <div className="text-sm text-gray-600 mt-3">
-                      <p>
-                        Document Type:{" "}
-                        {user.professionalVerification.documents[0]?.type ||
-                          "Not specified"}
-                      </p>
-                      <p>
-                        License Number:{" "}
-                        {user.professionalVerification.licenseNumber ||
-                          "Not provided"}
-                      </p>
-                      <p>
-                        Submitted:{" "}
-                        {user.professionalVerification.submittedAt
-                          ? new Date(
-                              user.professionalVerification.submittedAt,
-                            ).toLocaleDateString()
-                          : "Not available"}
-                      </p>
+
+                    {/* Display all uploaded documents */}
+                    <div className="space-y-4">
+                      {console.log(user.professionalVerification.documents)}
+                      {user.professionalVerification.documents.map(
+                        (doc, index) => (
+                          <div key={index} className="border rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <h6 className="font-medium">{doc.name}</h6>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleViewDocument(doc)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDownloadDocument(doc)}
+                                >
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+
+                            {/* Document Preview */}
+                            {doc.url ? (
+                              <div className="bg-gray-100 rounded-lg h-48 flex items-center justify-center overflow-hidden">
+                                {doc.url ? (
+                                  <img
+                                    src={doc.url}
+                                    alt={doc.name}
+                                    className="max-w-full max-h-full object-contain"
+                                  />
+                                ) : (
+                                  <div className="text-center">
+                                    <FileText className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                                    <p className="text-sm">Document Preview</p>
+                                    <p className="text-xs mt-1">
+                                      Click to view document
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="bg-gray-100 rounded-lg h-48 flex items-center justify-center">
+                                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                                <p className="text-sm">No preview available</p>
+                              </div>
+                            )}
+
+                            <div className="text-sm text-gray-600 mt-3">
+                              <p>
+                                Uploaded:{" "}
+                                {new Date(doc.uploadedAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                        ),
+                      )}
                     </div>
                   </div>
                 )}
@@ -172,10 +277,38 @@ export default function UserVerificationModal({ user, isOpen, onClose }) {
                 <div className="flex items-center justify-between mb-3">
                   <h5 className="font-medium">Business Information</h5>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const businessDoc = {
+                          name:
+                            user.professionalVerification.businessName ||
+                            "Business Document",
+                          data: user.professionalVerification
+                            .businessRegistration,
+                          type: "businessRegistration",
+                        };
+                        handleViewDocument(businessDoc);
+                      }}
+                    >
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="outline">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const businessDoc = {
+                          name:
+                            user.professionalVerification.businessName ||
+                            "Business Document",
+                          data: user.professionalVerification
+                            .businessRegistration,
+                          type: "businessRegistration",
+                        };
+                        handleDownloadDocument(businessDoc);
+                      }}
+                    >
                       <Download className="h-4 w-4" />
                     </Button>
                   </div>
@@ -217,14 +350,14 @@ export default function UserVerificationModal({ user, isOpen, onClose }) {
                   <div className="space-y-2">
                     <h5 className="font-medium">Additional Documents</h5>
                     {user.professionalVerification.additionalDocuments.map(
-                      (doc, index) => (
+                      (additionalDoc, index) => (
                         <div
                           key={index}
                           className="flex items-center gap-3 p-2 rounded border border-border hover:bg-secondary/50"
                         >
                           <FileText className="w-4 h-4 text-primary" />
                           <span className="text-sm font-medium">
-                            {doc.name || doc.type}
+                            {additionalDoc.name || additionalDoc.type}
                           </span>
                           <CheckCircle className="w-4 h-4 text-green-600 ml-auto" />
                         </div>

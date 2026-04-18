@@ -7,69 +7,74 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Briefcase, 
-  Upload, 
-  CheckCircle, 
-  Clock, 
-  AlertCircle, 
+import {
+  Briefcase,
+  Upload,
+  CheckCircle,
+  Clock,
+  AlertCircle,
   XCircle,
   FileText,
   Award,
   Building,
-  GraduationCap
+  GraduationCap,
 } from "lucide-react";
 import { uploadProfessionalDocument } from "../action/UserActions";
 
-const ProfessionalVerification = ({ userId, professionalVerification = {} }) => {
+const ProfessionalVerification = ({
+  userId,
+  userVerification,
+  professionalVerification = {},
+}) => {
   const [selectedDocuments, setSelectedDocuments] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [formData, setFormData] = useState({
     profession: professionalVerification.profession || "",
     businessName: professionalVerification.businessName || "",
     businessRegistration: professionalVerification.businessRegistration || "",
     licenseNumber: professionalVerification.licenseNumber || "",
     experience: professionalVerification.experience || "",
-    description: professionalVerification.description || ""
+    description: professionalVerification.description || "",
   });
 
   const fileInputRefs = {
     businessLicense: useRef(null),
     professionalCertificate: useRef(null),
     proofOfAddress: useRef(null),
-    additionalDocument: useRef(null)
+    additionalDocument: useRef(null),
   };
 
   const documentTypes = [
     {
       key: "businessLicense",
-      title: "Business License",
-      description: "Valid business registration document",
+      title: "Ghana Card Front",
+      description: "The front of your Ghana Card",
       icon: Building,
-      required: true
+      required: true,
     },
     {
       key: "professionalCertificate",
-      title: "Professional Certificate",
-      description: "Professional qualification or certification",
+      title: "Ghana Card Back",
+      description: "The back of your Ghana Card",
       icon: Award,
-      required: true
+      required: true,
     },
     {
       key: "proofOfAddress",
       title: "Proof of Address",
       description: "Utility bill or bank statement (last 3 months)",
       icon: FileText,
-      required: true
+      required: true,
     },
     {
       key: "additionalDocument",
       title: "Additional Document",
       description: "Any other supporting documents",
       icon: FileText,
-      required: false
-    }
+      required: false,
+    },
   ];
 
   const handleFileSelect = (documentType, files) => {
@@ -84,13 +89,13 @@ const ProfessionalVerification = ({ userId, professionalVerification = {} }) => 
 
     const fileReader = new FileReader();
     fileReader.onload = () => {
-      setSelectedDocuments(prev => ({
+      setSelectedDocuments((prev) => ({
         ...prev,
         [documentType]: {
           file: fileReader.result,
           name: file.name,
-          type: file.type
-        }
+          type: file.type,
+        },
       }));
     };
     fileReader.readAsDataURL(file);
@@ -98,7 +103,7 @@ const ProfessionalVerification = ({ userId, professionalVerification = {} }) => 
   };
 
   const handleRemoveDocument = (documentType) => {
-    setSelectedDocuments(prev => {
+    setSelectedDocuments((prev) => {
       const newDocs = { ...prev };
       delete newDocs[documentType];
       return newDocs;
@@ -106,33 +111,57 @@ const ProfessionalVerification = ({ userId, professionalVerification = {} }) => 
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const handleSubmit = async () => {
     setLoading(true);
     setError("");
+    setSuccess("");
 
     try {
-      const documents = Object.entries(selectedDocuments).map(([type, doc]) => ({
-        type,
-        name: doc.name,
-        data: doc.file,
-        uploadedAt: new Date().toISOString()
-      }));
+      // Create documents array from selectedDocuments (actual uploaded files)
+      const documents = Object.entries(selectedDocuments).map(
+        ([type, doc]) => ({
+          type,
+          name: doc.name,
+          url: doc.url || doc.file, // Use Cloudinary URL if available
+          uploadedAt: new Date().toISOString(),
+        }),
+      );
 
       const verificationData = {
         ...formData,
         documents,
         submittedAt: new Date().toISOString(),
-        status: "pending"
+        status: "Pending",
       };
 
       await uploadProfessionalDocument(userId, verificationData);
-      // You might want to refresh the page or show success message here
+
+      // Clear form and documents after successful submission
+      setSelectedDocuments({});
+      setFormData({
+        profession: "",
+        businessName: "",
+        businessRegistration: "",
+        licenseNumber: "",
+        experience: "",
+        description: "",
+      });
+
+      // Show success message
+      setSuccess(
+        "Professional verification submitted successfully! Your documents are now under review.",
+      );
+
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setSuccess("");
+      }, 5000);
     } catch (err) {
       setError(err.message || "Failed to submit professional verification");
     } finally {
@@ -141,24 +170,33 @@ const ProfessionalVerification = ({ userId, professionalVerification = {} }) => 
   };
 
   const getStatusBadge = () => {
-    const status = professionalVerification.status;
-    
+    console.log("userVerification", userVerification);
+    const status =
+      professionalVerification.status ||
+      (userVerification === "Pending"
+        ? "Pending"
+        : userVerification === "Verified"
+          ? "Verified"
+          : userVerification === "Failed"
+            ? "Failed"
+            : null);
+
     switch (status) {
-      case "verified":
+      case "Verified":
         return (
           <Badge className="bg-green-100 text-green-800 border-green-200">
             <CheckCircle className="w-3 h-3 mr-1" />
             Verified Professional
           </Badge>
         );
-      case "pending":
+      case "Pending":
         return (
           <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
             <Clock className="w-3 h-3 mr-1" />
             Under Review
           </Badge>
         );
-      case "failed":
+      case "Failed":
         return (
           <Badge className="bg-red-100 text-red-800 border-red-200">
             <XCircle className="w-3 h-3 mr-1" />
@@ -175,8 +213,17 @@ const ProfessionalVerification = ({ userId, professionalVerification = {} }) => 
     }
   };
 
-  const isVerified = professionalVerification.status === "verified";
-  const hasPendingSubmission = professionalVerification.status === "pending";
+  const hasVerificationData =
+    professionalVerification &&
+    (professionalVerification.profession ||
+      professionalVerification.businessName ||
+      professionalVerification.documents?.length > 0);
+  const isVerified =
+    userVerification === "Verified" ||
+    userVerification === "professional_verified";
+  const hasPendingSubmission =
+    userVerification === "Pending" ||
+    userVerification === "professional_pending";
 
   return (
     <Card className="p-6 space-y-6">
@@ -190,10 +237,11 @@ const ProfessionalVerification = ({ userId, professionalVerification = {} }) => 
             </h3>
           </div>
           <p className="text-sm text-gray-600">
-            Verify your professional status to increase trust and unlock premium features
+            Verify your professional status to increase trust and unlock premium
+            features
           </p>
         </div>
-        {getStatusBadge()}
+        {/* {getStatusBadge()} */}
       </div>
 
       {isVerified ? (
@@ -203,30 +251,48 @@ const ProfessionalVerification = ({ userId, professionalVerification = {} }) => 
             <div className="flex items-center gap-3">
               <CheckCircle className="w-6 h-6 text-green-600" />
               <div>
-                <h4 className="font-semibold text-green-900">Professional Verified</h4>
+                <h4 className="font-semibold text-green-900">
+                  Professional Verified
+                </h4>
                 <p className="text-sm text-green-700 mt-1">
                   Your professional credentials have been verified
                 </p>
               </div>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label className="text-sm font-medium text-gray-700">Profession</Label>
-              <p className="text-gray-900">{professionalVerification.profession}</p>
+              <Label className="text-sm font-medium text-gray-700">
+                Profession
+              </Label>
+              <p className="text-gray-900">
+                {professionalVerification.profession}
+              </p>
             </div>
             <div>
-              <Label className="text-sm font-medium text-gray-700">Business Name</Label>
-              <p className="text-gray-900">{professionalVerification.businessName}</p>
+              <Label className="text-sm font-medium text-gray-700">
+                Business Name
+              </Label>
+              <p className="text-gray-900">
+                {professionalVerification.businessName}
+              </p>
             </div>
             <div>
-              <Label className="text-sm font-medium text-gray-700">License Number</Label>
-              <p className="text-gray-900">{professionalVerification.licenseNumber}</p>
+              <Label className="text-sm font-medium text-gray-700">
+                License Number
+              </Label>
+              <p className="text-gray-900">
+                {professionalVerification.licenseNumber}
+              </p>
             </div>
             <div>
-              <Label className="text-sm font-medium text-gray-700">Experience</Label>
-              <p className="text-gray-900">{professionalVerification.experience}</p>
+              <Label className="text-sm font-medium text-gray-700">
+                Experience
+              </Label>
+              <p className="text-gray-900">
+                {professionalVerification.experience}
+              </p>
             </div>
           </div>
         </div>
@@ -239,12 +305,13 @@ const ProfessionalVerification = ({ userId, professionalVerification = {} }) => 
               <div>
                 <h4 className="font-semibold text-yellow-900">Under Review</h4>
                 <p className="text-sm text-yellow-700 mt-1">
-                  Your professional verification is being reviewed. This typically takes 2-3 business days.
+                  Your professional verification is being reviewed. This
+                  typically takes 2-3 business days.
                 </p>
               </div>
             </div>
           </div>
-          
+
           <div className="text-sm text-gray-600">
             <p>Submitted documents:</p>
             <ul className="list-disc list-inside mt-2 space-y-1">
@@ -263,65 +330,86 @@ const ProfessionalVerification = ({ userId, professionalVerification = {} }) => 
             </div>
           )}
 
+          {success && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <p className="text-green-700">{success}</p>
+              </div>
+            </div>
+          )}
+
           {/* Professional Information */}
           <div className="space-y-4">
             <h4 className="font-medium text-gray-900 flex items-center gap-2">
               <GraduationCap className="w-4 h-4" />
               Professional Information
             </h4>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="profession">Profession *</Label>
                 <Input
                   id="profession"
                   value={formData.profession}
-                  onChange={(e) => handleInputChange("profession", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("profession", e.target.value)
+                  }
                   placeholder="e.g., Software Developer, Designer, Consultant"
                   className="mt-1"
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="businessName">Business Name</Label>
                 <Input
                   id="businessName"
                   value={formData.businessName}
-                  onChange={(e) => handleInputChange("businessName", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("businessName", e.target.value)
+                  }
                   placeholder="Your business or company name"
                   className="mt-1"
                 />
               </div>
-              
+
               <div>
-                <Label htmlFor="licenseNumber">Professional License Number</Label>
+                <Label htmlFor="licenseNumber">
+                  Professional License Number
+                </Label>
                 <Input
                   id="licenseNumber"
                   value={formData.licenseNumber}
-                  onChange={(e) => handleInputChange("licenseNumber", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("licenseNumber", e.target.value)
+                  }
                   placeholder="Your professional license number"
                   className="mt-1"
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="experience">Years of Experience</Label>
                 <Input
                   id="experience"
                   value={formData.experience}
-                  onChange={(e) => handleInputChange("experience", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("experience", e.target.value)
+                  }
                   placeholder="e.g., 5+ years"
                   className="mt-1"
                 />
               </div>
             </div>
-            
+
             <div>
               <Label htmlFor="description">Professional Description</Label>
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
                 placeholder="Describe your professional background and expertise..."
                 className="mt-1"
                 rows={3}
@@ -335,23 +423,28 @@ const ProfessionalVerification = ({ userId, professionalVerification = {} }) => 
               <FileText className="w-4 h-4" />
               Required Documents
             </h4>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {documentTypes.map((docType) => {
                 const Icon = docType.icon;
                 const selectedDoc = selectedDocuments[docType.key];
-                
+
                 return (
                   <div key={docType.key} className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Icon className="w-4 h-4 text-gray-500" />
                       <Label className="text-sm font-medium">
-                        {docType.title} {docType.required && <span className="text-red-500">*</span>}
+                        {docType.title}{" "}
+                        {docType.required && (
+                          <span className="text-red-500">*</span>
+                        )}
                       </Label>
                     </div>
-                    
-                    <p className="text-xs text-gray-500">{docType.description}</p>
-                    
+
+                    <p className="text-xs text-gray-500">
+                      {docType.description}
+                    </p>
+
                     {selectedDoc ? (
                       <div className="relative">
                         <div className="w-full h-32 border rounded-lg overflow-hidden">
@@ -378,19 +471,25 @@ const ProfessionalVerification = ({ userId, professionalVerification = {} }) => 
                     ) : (
                       <div
                         className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 transition-colors"
-                        onClick={() => fileInputRefs[docType.key].current?.click()}
+                        onClick={() =>
+                          fileInputRefs[docType.key].current?.click()
+                        }
                       >
                         <Upload className="w-6 h-6 text-gray-400 mb-2" />
-                        <span className="text-sm text-gray-500">Click to upload</span>
+                        <span className="text-sm text-gray-500">
+                          Click to upload
+                        </span>
                         <span className="text-xs text-gray-400">Max 5MB</span>
                       </div>
                     )}
-                    
+
                     <input
                       ref={fileInputRefs[docType.key]}
                       type="file"
                       accept="image/*,.pdf"
-                      onChange={(e) => handleFileSelect(docType.key, e.target.files)}
+                      onChange={(e) =>
+                        handleFileSelect(docType.key, e.target.files)
+                      }
                       className="hidden"
                     />
                   </div>

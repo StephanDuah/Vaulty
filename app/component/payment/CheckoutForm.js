@@ -245,7 +245,7 @@ const CheckoutForm = ({ user }) => {
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
             <ProfileDisplay
-              name={`${firstName} ${lastName}`}
+              name={`${firstName} " " ${lastName}`}
               businessName={businessName}
               phoneNumber={phoneNo}
               location="Tafo Bonsuom"

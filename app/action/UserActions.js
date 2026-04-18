@@ -8,9 +8,11 @@ import { redirect } from "next/navigation";
 import { object } from "zod";
 import { formatGhanaPhone, generateSecureOTP } from "@/lib/utils";
 import { sendMessage } from "@/lib/mailing/sms";
+import { CredentialsSignin } from "next-auth";
 import { cache } from "react";
 import { uploadFromBuffer } from "@/lib/imaging";
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 
 //Creating new user for seller
 export const createSeller = async (prevState, formData) => {
@@ -18,13 +20,15 @@ export const createSeller = async (prevState, formData) => {
   let firstName = formData.get("firstName");
   let lastName = formData.get("lastName");
   let businessName = formData.get("businessName");
-  let email = formData.get("email");
+  let emailData = formData.get("email");
   let password = formData.get("password");
   let confirm_password = formData.get("confirm_password");
   let phoneNo = formData.get("phoneNo");
   let dtd = formData.get("dtd");
+  let email = emailData.toLowerCase();
   try {
     let errors = {};
+
     const otpCode = generateSecureOTP();
     const userExist = await User.findOne({ email });
     const businessNameExist = await User.findOne({ businessName });
@@ -133,7 +137,8 @@ export const getUserbyCredentials = async (identifier, password) => {
     if (!isMatch) throw new CredentialsSignin("Invalid credentials");
     return user;
   } catch (error) {
-    console.log(error);
+    console.error("Authentication error:", error);
+    throw error; // Re-throw the error to be handled by NextAuth
   }
 };
 
@@ -143,17 +148,56 @@ export const loginUser = async (prevState, formdata) => {
   try {
     const email = formdata.get("email");
     const password = formdata.get("password");
-    await signIn("credentials", { email, password, redirect: false });
+
+    if (!email || !password) {
+      return { type: "error", message: "Email and password are required" };
+    }
+
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    if (result?.error) {
+      return { type: "error", message: "Invalid credentials" };
+    }
+
+    return { type: "success", message: "Login successful" };
   } catch (error) {
-    console.log(error);
+    console.error("Login error:", error);
     if (error.name === "CredentialsSignin") {
-      return { type: "error", message: "Invalid Credentials" };
+      return { type: "error", message: "Invalid credentials" };
+    } else if (error.message?.includes("Database")) {
+      return { type: "error", message: "Database connection error" };
     } else {
       return { type: "error", message: "Something went wrong" };
     }
   }
+};
 
-  redirect("/seller");
+// Delete user account and invalidate all sessions
+export const deleteUserAccount = async (userId) => {
+  await connectDB();
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Delete user from database
+    await User.findByIdAndDelete(userId);
+
+    // Note: NextAuth doesn't have a direct way to invalidate all sessions
+    // But the session callback will check for user existence and invalidate
+    // any existing sessions when the user is no longer found
+
+    console.log(`User ${userId} account deleted successfully`);
+    return { success: true, message: "Account deleted successfully" };
+  } catch (error) {
+    console.error("Error deleting user account:", error);
+    return { success: false, message: error.message };
+  }
 };
 
 export const getUserDetailsBySlug = cache(async (slug) => {
@@ -288,7 +332,7 @@ export const CardUpload = async (cardImage, userId, cardType) => {
 
     console.log(identification);
     user.identification = identification;
-    user.verification = "pending";
+    user.verification = "id_pending";
     await user.save();
     console.log(result);
     return { type: "success", message: "Image sent to the system" };
@@ -313,7 +357,7 @@ export const getPendingVerificationUsers = async () => {
   await connectDB();
   try {
     const users = await User.find({
-      verification: { $in: ["pending", "verification"] },
+      verification: { $in: ["Pending"] },
     }).sort({ createdAt: -1 });
 
     return JSON.parse(JSON.stringify(users));
@@ -335,7 +379,14 @@ export const uploadProfessionalDocument = async (userId, verificationData) => {
     const processedDocuments = [];
     for (const doc of verificationData.documents) {
       try {
-        const result = await uploadFromBuffer(doc.data);
+        // Handle both base64 data and URL
+        const documentData = doc.data || doc.url;
+        if (!documentData) {
+          console.error(`Document ${doc.name} has no data or URL`);
+          continue;
+        }
+
+        const result = await uploadFromBuffer(documentData);
         processedDocuments.push({
           type: doc.type,
           name: doc.name,
@@ -343,6 +394,8 @@ export const uploadProfessionalDocument = async (userId, verificationData) => {
           publicId: result.public_id,
           uploadedAt: doc.uploadedAt,
         });
+
+        console.log(result);
       } catch (uploadError) {
         console.error(`Failed to upload document ${doc.name}:`, uploadError);
         throw new Error(`Failed to upload ${doc.name}`);
@@ -358,10 +411,11 @@ export const uploadProfessionalDocument = async (userId, verificationData) => {
       description: verificationData.description,
       documents: processedDocuments,
       submittedAt: verificationData.submittedAt,
-      status: verificationData.status,
     };
 
     user.professionalVerification = professionalVerification;
+    user.verification = "Pending";
+    console.log("Setting verification status to:", user.verification);
     await user.save();
 
     return {

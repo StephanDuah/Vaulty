@@ -5,6 +5,8 @@ import RegisterImage from "@/public/images/auth/registerImage.jpg";
 import { loginUser } from "@/app/action/UserActions";
 import { useActionState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import {
   Shield,
   ArrowLeft,
@@ -139,6 +141,13 @@ const LoginForm = () => {
 
 const FormSection = () => {
   const [state, formAction, pending] = useActionState(loginUser, initialState);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state.type === "success") {
+      router.push("/seller");
+    }
+  }, [state, router]);
 
   const DisplayToast = ({ state }) => {
     if (state.type === "error") {

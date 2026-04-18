@@ -88,7 +88,7 @@ export async function POST(request) {
 
     // Update user with professional verification data
     user.professionalVerification = professionalVerificationData;
-    user.verification = "pending";
+    user.verification = "Pending";
     user.fullName = fullName;
     user.dateOfBirth = dateOfBirth;
     await user.save();

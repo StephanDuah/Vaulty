@@ -65,12 +65,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
 
+        // Verify user still exists in database
+        const User = (await import("@/lib/models/User")).default;
+        const { connectDB } = await import("@/lib/database");
+        await connectDB();
+
+        const user = await User.findById(token.id);
+        if (!user) {
+          // User was deleted, invalidate session
+          console.log(`User ${token.id} not found, invalidating session`);
+          return null;
+        }
+
         session.user = {
           id: token.id,
           email: token.email,
           name: token.name,
-
-          active: token.active,
+          active: user.active || token.active,
         };
         return session;
       } catch (error) {

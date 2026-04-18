@@ -12,7 +12,7 @@ const getSeller = async (slug) => {
   if (!user) notFound();
 
   // Check if seller is verified
-  if (user.verification !== "verified") {
+  if (user.verification !== "Verified") {
     notFound();
   }
 

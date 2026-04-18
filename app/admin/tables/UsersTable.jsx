@@ -213,7 +213,7 @@ export default function UsersTable({
                     {getStatusBadge(user.verification)}
                   </TableCell>
                   <TableCell className="px-6 py-4">
-                    {user.verification === "verified" ? (
+                    {user.verification === "Verified" ? (
                       <div className="flex items-center gap-2 text-green-600 font-medium">
                         <CheckCircle className="h-5 w-5" />
                         <span>Verified</span>
@@ -239,7 +239,7 @@ export default function UsersTable({
                   </TableCell>
                   <TableCell className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
-                      {user.verification === "pending" && (
+                      {user.verification === "Pending" && (
                         <Button
                           size="sm"
                           onClick={() => openVerificationModal(user)}
